@@ -53,13 +53,38 @@ const Dashboard = () => {
             setGamificationStats(gamStats);
             setBadges(gamificationService.getBadges());
 
-            // Load real enrollments from Supabase
+            // Load enrollments from Supabase to replace mock curriculum
             try {
                 const enrollments = await database.getUserEnrollments(currentUser.id);
+
                 if (enrollments && enrollments.length > 0) {
-                    // Transform enrollments to curriculum format if needed
-                    // For now, we'll keep the mock curriculum but we could replace it
+                    // map enrollments to curriculum format
+                    // Section = Enrolled Course
+                    // Modules = ? (We need to fetch modules for each course or assume active one)
+                    // For now, let's treat each enrolled course as a "Section" in the view
+
+                    const newCurriculum = enrollments.map(enrollment => ({
+                        id: enrollment.course.id,
+                        title: enrollment.course.title,
+                        modules: [
+                            {
+                                id: `mod-${enrollment.course.id}`,
+                                title: 'Continue Learning',
+                                status: enrollment.progress > 0 ? 'in-progress' : 'in-progress'
+                            }
+                        ]
+                    }));
+                    setCurriculum(newCurriculum);
+                } else {
+                    // If no enrollments, show recommended as a "suggested" path? 
+                    // Or keep empty to encourage enrollment
+                    setCurriculum([]);
                 }
+
+                // Load stats based on real data if possible, or keep mock for gamification for now
+                const userStats = curriculumService.getAnalytics();
+                setStats(userStats);
+
             } catch (error) {
                 console.error("Error loading enrollments:", error);
             }

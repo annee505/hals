@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import { authService } from '../services/auth';
 import { database } from '../services/database';
 import { courseContentService } from '../services/courseContent';
@@ -32,6 +33,41 @@ const CourseDetail = () => {
     const [newBadges, setNewBadges] = useState([]);
     const [activeQuizId, setActiveQuizId] = useState(null);
     const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+
+    const [showCompletionModal, setShowCompletionModal] = useState(false);
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.courseCompleted) {
+            setShowCompletionModal(true);
+            triggerConfetti();
+            // Clear state so it doesn't fire on reload
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
+
+    const triggerConfetti = () => {
+        var duration = 3 * 1000;
+        var animationEnd = Date.now() + duration;
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        var random = function (min, max) {
+            return Math.random() * (max - min) + min;
+        };
+
+        var interval = setInterval(function () {
+            var timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            var particleCount = 50 * (timeLeft / duration);
+            // since particles fall down, start a bit higher than random
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: random(0.1, 0.3), y: Math.random() - 0.2 } }));
+            confetti(Object.assign({}, defaults, { particleCount, origin: { x: random(0.7, 0.9), y: Math.random() - 0.2 } }));
+        }, 250);
+    };
 
     useEffect(() => {
         const loadData = async () => {
@@ -108,6 +144,12 @@ const CourseDetail = () => {
         try {
             // For now, generate a quiz based on the first module's content or generic
             // In a real app, we'd select a specific module
+            if (!content.modules || content.modules.length === 0) {
+                alert("This course has no content to generate a quiz from.");
+                setIsGeneratingQuiz(false);
+                return;
+            }
+
             const moduleToQuiz = content.modules[0];
             const lessonContent = moduleToQuiz.lessons.map(l => l.content).join('\n');
 
@@ -220,10 +262,10 @@ const CourseDetail = () => {
                                                     </div>
                                                     <div className="flex space-x-2">
                                                         <button
-                                                            onClick={() => alert(lesson.content)}
+                                                            onClick={() => navigate(`/course/${courseId}/lesson/${lesson.id}`)}
                                                             className="px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
                                                         >
-                                                            View
+                                                            Start Lesson
                                                         </button>
                                                         <button
                                                             onClick={() => handleLessonComplete(lesson.id)}
@@ -332,6 +374,38 @@ const CourseDetail = () => {
             {newBadges.length > 0 && (
                 <BadgeUnlockPopup badges={newBadges} onClose={() => setNewBadges([])} />
             )}
+
+            <AnimatePresence>
+                {showCompletionModal && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.8, opacity: 0 }}
+                            className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 max-w-md w-full text-center relative overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-indigo-500/10 z-0"></div>
+                            <div className="relative z-10">
+                                <div className="w-24 h-24 bg-gradient-to-br from-yellow-300 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-amber-500/30">
+                                    <Award className="w-12 h-12 text-white" />
+                                </div>
+                                <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
+                                    Course Completed!
+                                </h2>
+                                <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg">
+                                    Congratulations! You've mastered <strong>{course.title}</strong>.
+                                </p>
+                                <button
+                                    onClick={() => setShowCompletionModal(false)}
+                                    className="w-full bg-gradient-to-r from-primary to-indigo-600 text-white py-4 rounded-2xl font-bold text-lg hover:shadow-xl hover:scale-[1.02] transition-all"
+                                >
+                                    Awesome!
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
