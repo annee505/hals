@@ -11,6 +11,9 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Safety timeout to prevent infinite loading
+        const safetyTimer = setTimeout(() => setLoading(false), 5000);
+
         // Check active session
         const initSession = async () => {
             try {
@@ -23,6 +26,8 @@ export const AuthProvider = ({ children }) => {
                 }
             } catch (error) {
                 console.error('Error checking session:', error);
+                // Ensure we don't block app if session check fails
+                setLoading(false);
             } finally {
                 setLoading(false);
             }

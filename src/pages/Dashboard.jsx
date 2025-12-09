@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authService } from '../services/auth';
+import { useAuth } from '../context/AuthContext';
 import { curriculumService } from '../services/curriculum';
 import { gamificationService } from '../services/gamification';
 import { aiCourseGenerator } from '../services/aiCourseGenerator';
@@ -18,7 +19,7 @@ import { MessageSquare, Plus, Sparkles, Loader2, X } from 'lucide-react';
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const [user, setUser] = useState(null);
+    const { user } = useAuth();
     const [curriculum, setCurriculum] = useState([]);
     const [stats, setStats] = useState(null);
     const [showChat, setShowChat] = useState(false);
@@ -35,12 +36,7 @@ const Dashboard = () => {
 
     useEffect(() => {
         const loadData = async () => {
-            const currentUser = authService.getUser();
-            if (!currentUser) {
-                navigate('/');
-                return;
-            }
-            setUser(currentUser);
+            if (!user) return;
 
             try {
                 // Initialize default empty structure for immediate render
@@ -52,7 +48,7 @@ const Dashboard = () => {
                 }
 
                 // Load real enrollments (Async)
-                const enrollments = await database.getUserEnrollments(currentUser.id);
+                const enrollments = await database.getUserEnrollments(user.id);
 
                 if (enrollments && enrollments.length > 0) {
                     const newCurriculum = enrollments.map(enrollment => ({
@@ -75,8 +71,10 @@ const Dashboard = () => {
             }
         };
 
-        loadData();
-    }, [navigate]);
+        if (user) {
+            loadData();
+        }
+    }, [user, navigate]);
 
     const handleChallengeStart = () => {
         setShowAssessment(true);
