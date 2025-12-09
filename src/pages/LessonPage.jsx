@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { authService } from '../services/auth';
+import { useAuth } from '../context/AuthContext';
 import { database } from '../services/database';
 import { courseContentService } from '../services/courseContent';
 import { gamificationService } from '../services/gamification';
@@ -13,7 +13,7 @@ import remarkGfm from 'remark-gfm';
 const LessonPage = () => {
     const { courseId, lessonId } = useParams();
     const navigate = useNavigate();
-    const [user, setUser] = useState(null);
+    const { user } = useAuth();
     const [course, setCourse] = useState(null);
     const [content, setContent] = useState(null);
     const [currentLesson, setCurrentLesson] = useState(null);
@@ -23,19 +23,14 @@ const LessonPage = () => {
 
     useEffect(() => {
         const loadLessonData = async () => {
-            const currentUser = authService.getUser();
-            if (!currentUser) {
-                navigate('/login');
-                return;
-            }
-            setUser(currentUser);
+            if (!user) return;
 
             try {
                 // Fetch course info and content structure
                 const [courseData, courseContent, userProgress] = await Promise.all([
                     database.getCourseById(courseId),
                     courseContentService.getCourseContent(courseId),
-                    courseContentService.getProgress(currentUser.id, courseId)
+                    courseContentService.getProgress(user.id, courseId)
                 ]);
 
                 setCourse(courseData);
@@ -71,7 +66,7 @@ const LessonPage = () => {
         };
 
         loadLessonData();
-    }, [courseId, lessonId, navigate]);
+    }, [courseId, lessonId, user]);
 
     const handleComplete = async () => {
         if (!user || !currentLesson) return;

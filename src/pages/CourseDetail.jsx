@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth';
 import { database } from '../services/database';
 import { courseContentService } from '../services/courseContent';
@@ -20,7 +21,7 @@ import { BookOpen, CheckCircle, Circle, Award, Brain, Upload, ChevronDown, Chevr
 const CourseDetail = () => {
     const navigate = useNavigate();
     const { courseId } = useParams();
-    const [user, setUser] = useState(null);
+    const { user } = useAuth();
     const [course, setCourse] = useState(null);
     const [content, setContent] = useState(null);
     const [progress, setProgress] = useState(null);
@@ -71,12 +72,7 @@ const CourseDetail = () => {
 
     useEffect(() => {
         const loadData = async () => {
-            const currentUser = authService.getUser();
-            if (!currentUser) {
-                navigate('/login');
-                return;
-            }
-            setUser(currentUser);
+            if (!user) return;
 
             try {
                 const courseData = await database.getCourseById(courseId);
@@ -85,13 +81,13 @@ const CourseDetail = () => {
                 const courseContent = await courseContentService.getCourseContent(courseId);
                 setContent(courseContent);
 
-                const userProgress = await courseContentService.getProgress(currentUser.id, courseId);
+                const userProgress = await courseContentService.getProgress(user.id, courseId);
                 setProgress(userProgress);
 
-                const files = aiKnowledgeService.getUserFiles(currentUser.id);
+                const files = aiKnowledgeService.getUserFiles(user.id);
                 setUploadedFiles(files.filter(f => f.courseId === courseId || !f.courseId));
 
-                const fcProgress = flashcardService.getProgress(currentUser.id, courseId);
+                const fcProgress = flashcardService.getProgress(user.id, courseId);
                 setFlashcardProgress(fcProgress);
             } catch (error) {
                 console.error("Error loading course data:", error);
@@ -99,7 +95,7 @@ const CourseDetail = () => {
         };
 
         loadData();
-    }, [courseId, navigate]);
+    }, [courseId, user]);
 
     const toggleModule = (moduleId) => {
         setExpandedModules(prev => ({ ...prev, [moduleId]: !prev[moduleId] }));
