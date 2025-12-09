@@ -208,35 +208,211 @@ async function generateAndSeedCourse(courseTitle, tags) {
                     title: "Module 1: Introduction",
                     description: "Getting started with the basics.",
                     lessons: [
-                        { title: "Welcome to the Course", content: "Welcome! In this lesson, we will overview what you will learn.", duration: "10 min" },
-                        { title: "Setting Up Your Environment", content: "Learn how to set up the necessary tools and software.", duration: "20 min" },
-                        { title: "Key Concepts", content: "Understanding the core concepts and terminology.", duration: "30 min" }
+                        {
+                            title: "Welcome to the Course",
+                            content: `## Welcome to the Course
+                            
+We are thrilled to have you here! In this introductory lesson, we will cover the **goals and structure** of this course.
+
+### What You Will Learn
+* Comprehensive understanding of the core principles.
+* Practical skills you can apply immediately.
+* Best practices used by industry professionals.
+
+**Key Takeaways:**
+* This course is designed for all skill levels.
+* You will build a real-world project by the end.
+
+Video Resource: [Watch Introduction on YouTube](https://www.youtube.com/watch?v=dQw4w9WgXcQ)`,
+                            duration: "10 min"
+                        },
+                        {
+                            title: "Setting Up Your Environment",
+                            content: `## Setting Up Your Environment
+
+Success starts with the right tools. Let's get your workspace ready.
+
+### Required Tools
+1. **Code Editor**: We recommend VS Code.
+2. **Terminal**: Any standard terminal will work.
+3. **Node.js**: Ensure you have the latest LTS version.
+
+> **Pro Tip:** Keep your environment clean and organized to boost productivity.
+
+Video Resource: [Setup Guide](https://www.youtube.com/watch?v=fNj-Y_g6j2g)`,
+                            duration: "20 min"
+                        },
+                        {
+                            title: "Key Concepts",
+                            content: `## Key Concepts Overview
+
+Before diving deep, let's define the terminology.
+
+### Core Terminology
+* **Frontend**: What the user sees.
+* **Backend**: The logic behind the scenes.
+* **API**: How they talk to each other.
+
+**Real World Application:**
+Imagine a restaurant. The menu is the **Frontend**, the kitchen is the **Backend**, and the waiter is the **API**.
+
+Video Resource: [Concepts Explained](https://www.youtube.com/watch?v=pTbSfCT48f0)`,
+                            duration: "30 min"
+                        }
                     ]
                 },
                 {
                     title: "Module 2: Core Fundamentals",
                     description: "Deep dive into the core topics.",
                     lessons: [
-                        { title: "Fundamental Topic 1", content: "Detailed explanation of the first major topic.", duration: "45 min" },
-                        { title: "Fundamental Topic 2", content: "Exploring the second major topic in depth.", duration: "45 min" },
-                        { title: "Practical Exercises", content: "Hands-on exercises to reinforce your learning.", duration: "60 min" }
+                        {
+                            title: "Fundamental Topic 1",
+                            content: `## Core Fundamentals: Part 1
+
+This is where the magic happens. We will explore the building blocks of the technology.
+
+### The Three Pillars
+1. **Structure**: How things are organized.
+2. **Style**: How things look.
+3. **Logic**: How things work.
+
+\`\`\`javascript
+// Example Code
+function learn(topic) {
+  console.log("Mastering " + topic);
+}
+\`\`\`
+
+Video Resource: [Deep Dive Video](https://www.youtube.com/watch?v=example)`,
+                            duration: "45 min"
+                        },
+                        {
+                            title: "Fundamental Topic 2",
+                            content: `## Core Fundamentals: Part 2
+
+Building on the previous lesson, we now look at **advanced interactions**.
+
+### Why this matters
+* **Performance**: Efficient code runs faster.
+* **Scalability**: Good structure grows with you.
+
+**Key Takeaways:**
+* Always plan before you build.
+* Test early and often.
+
+Video Resource: [Advanced Concepts](https://www.youtube.com/watch?v=example)`,
+                            duration: "45 min"
+                        },
+                        {
+                            title: "Practical Exercises",
+                            content: `## Hands-On Practice
+
+Theory is great, but practice is better. Let's build something small.
+
+### Challenge: Build a Counter
+Create a simple counter that increments when you click a button.
+
+**Steps:**
+1. Create user interface.
+2. Write the logic function.
+3. Connect the two.
+
+> "The only way to learn to code is to code."
+
+Video Resource: [Code Along](https://www.youtube.com/watch?v=example)`,
+                            duration: "60 min"
+                        }
                     ]
                 },
                 {
                     title: "Module 3: Advanced Techniques",
                     description: "Moving to more advanced subjects.",
                     lessons: [
-                        { title: "Advanced Concept A", content: "Mastering complex scenarios and edge cases.", duration: "50 min" },
-                        { title: "Optimization Strategies", content: "How to optimize your work for better performance.", duration: "40 min" }
+                        {
+                            title: "Advanced Concept A",
+                            content: `## Mastering Edge Cases
+
+Professional developers know how to handle the unexpected.
+
+### Common Pitfalls
+* **Race Conditions**: When things happen out of order.
+* **Memory Leaks**: Forgetting to clean up.
+
+We will learn patterns to avoid these.
+
+Video Resource: [Expert Tips](https://www.youtube.com/watch?v=example)`,
+                            duration: "50 min"
+                        },
+                        {
+                            title: "Optimization Strategies",
+                            content: `## Speed & Performance
+
+Nobody likes a slow app.
+
+### Optimization Checklist
+* [ ] Minify your code.
+* [ ] Optimize images.
+* [ ] Use lazy loading.
+
+**Real World Application:**
+Amazon found that every 100ms of latency cost them 1% in sales. Speed matters!
+
+Video Resource: [Performance Guide](https://www.youtube.com/watch?v=example)`,
+                            duration: "40 min"
+                        }
                     ]
                 },
                 {
                     title: "Module 4: Final Project",
                     description: "Applying what you've learned.",
                     lessons: [
-                        { title: "Project Planning", content: "How to plan and structure your final project.", duration: "30 min" },
-                        { title: "Building the Project", content: "Step-by-step guide to building the final project.", duration: "120 min" },
-                        { title: "Course Conclusion", content: "Wrap up and next steps for your learning journey.", duration: "15 min" }
+                        {
+                            title: "Project Planning",
+                            content: `## Planning Your Masterpiece
+
+Don't write code yet! First, we plan.
+
+### The Blueprint
+1. **User Stories**: Who is this for?
+2. **Wireframes**: What does it look like?
+3. **Tech Stack**: What tools will we use?
+
+Video Resource: [Project Planning 101](https://www.youtube.com/watch?v=example)`,
+                            duration: "30 min"
+                        },
+                        {
+                            title: "Building the Project",
+                            content: `## Build Phase
+
+Time to put it all together.
+
+**Milestones:**
+* **Hour 1**: Setup and Basic Layout.
+* **Hour 2**: Core Functionality.
+* **Hour 3**: Styling and Polish.
+
+You have all the skills needed to complete this. Good luck!
+
+Video Resource: [Live Build](https://www.youtube.com/watch?v=example)`,
+                            duration: "120 min"
+                        },
+                        {
+                            title: "Course Conclusion",
+                            content: `## Congratulations! 🎓
+
+You have completed the course!
+
+### What's Next?
+* **Build Portfolio**: Show off your project.
+* **Network**: Join communities.
+* **Keep Learning**: Technology never stops changing.
+
+**Certificate**:
+To get your certificate, go back to the course page and click "Download Certificate".
+
+Video Resource: [Final Words](https://www.youtube.com/watch?v=example)`,
+                            duration: "15 min"
+                        }
                     ]
                 }
             ]

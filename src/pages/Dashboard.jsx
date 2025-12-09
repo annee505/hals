@@ -26,6 +26,7 @@ const Dashboard = () => {
     const [gamificationStats, setGamificationStats] = useState(null);
     const [badges, setBadges] = useState([]);
     const [newBadges, setNewBadges] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
 
     // AI Generation State
     const [showGenerator, setShowGenerator] = useState(false);
@@ -197,7 +198,26 @@ const Dashboard = () => {
                             </div>
                         </div>
 
-                        <CurriculumView curriculum={curriculum} />
+                        {/* Search Bar for Enrolled Courses */}
+                        <div className="relative">
+                            <input
+                                type="text"
+                                className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm focus:ring-2 focus:ring-primary focus:border-transparent dark:text-white transition-all"
+                                placeholder="Search your courses..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Sparkles className="h-5 w-5 text-gray-400" />
+                            </div>
+                        </div>
+
+                        {/* Filtered Curriculum View */}
+                        <CurriculumView
+                            curriculum={curriculum.filter(c =>
+                                c.title.toLowerCase().includes(searchTerm.toLowerCase())
+                            )}
+                        />
                     </div>
 
                     {/* Sidebar: Analytics & Gamification */}
