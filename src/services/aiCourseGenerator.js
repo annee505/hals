@@ -11,6 +11,135 @@ const MODELS = [
     'llama3-70b-8192'
 ];
 
+// Fallback function when AI API hits rate limits
+function generateLocalCourse(userGoal) {
+    return {
+        title: `Master ${userGoal}`,
+        description: `A comprehensive course designed to help you master ${userGoal}. This structured learning path covers fundamentals to advanced topics, with practical exercises and real-world applications.`,
+        difficulty: "Beginner",
+        duration: "6 weeks",
+        tags: [userGoal.split(' ')[0], "Learning", "Skills"],
+        modules: [
+            {
+                title: "Getting Started",
+                description: `Introduction to ${userGoal} fundamentals`,
+                lessons: [
+                    { title: `What is ${userGoal}?`, duration: "15 min" },
+                    { title: "Setting Up Your Environment", duration: "20 min" },
+                    { title: "Key Concepts Overview", duration: "25 min" },
+                    { title: "Your First Project", duration: "30 min" }
+                ]
+            },
+            {
+                title: "Core Fundamentals",
+                description: `Deep dive into ${userGoal} basics`,
+                lessons: [
+                    { title: "Understanding the Basics", duration: "25 min" },
+                    { title: "Common Patterns", duration: "30 min" },
+                    { title: "Best Practices", duration: "25 min" },
+                    { title: "Practical Exercises", duration: "40 min" }
+                ]
+            },
+            {
+                title: "Intermediate Techniques",
+                description: `Building on your ${userGoal} skills`,
+                lessons: [
+                    { title: "Advanced Concepts", duration: "30 min" },
+                    { title: "Problem Solving", duration: "35 min" },
+                    { title: "Real-World Applications", duration: "30 min" },
+                    { title: "Case Study", duration: "45 min" }
+                ]
+            },
+            {
+                title: "Mastery & Projects",
+                description: `Becoming proficient in ${userGoal}`,
+                lessons: [
+                    { title: "Final Project Planning", duration: "20 min" },
+                    { title: "Building the Project", duration: "60 min" },
+                    { title: "Review & Optimization", duration: "30 min" },
+                    { title: "Next Steps & Resources", duration: "15 min" }
+                ]
+            }
+        ]
+    };
+}
+
+// Generate rich local lesson content
+function generateLocalLessonContent(lessonTitle, moduleName, courseName) {
+    return `## ${lessonTitle}
+
+Welcome to this lesson on **${lessonTitle}**! This is part of the "${moduleName}" module in our "${courseName}" course.
+
+### 📚 Introduction
+
+In this lesson, you will learn the essential concepts and practical applications of ${lessonTitle}. Understanding these fundamentals is crucial for your journey to mastering this subject.
+
+### 🎯 Learning Objectives
+
+By the end of this lesson, you will be able to:
+- Understand the core principles of ${lessonTitle}
+- Apply these concepts in real-world scenarios
+- Build confidence in your abilities
+
+### 📖 Core Concepts
+
+${lessonTitle} is a fundamental topic that forms the foundation for more advanced concepts. Let's break it down:
+
+**Key Points:**
+1. **Foundation** - Understanding the basics gives you a solid starting point
+2. **Practice** - Regular practice reinforces your learning
+3. **Application** - Real-world application helps cement your knowledge
+
+### 💻 Code Example
+
+\`\`\`javascript
+// Example code for ${lessonTitle}
+function demonstrate${lessonTitle.replace(/\s+/g, '')}() {
+    console.log("Learning: ${lessonTitle}");
+    
+    // Step 1: Initialize
+    const topic = "${lessonTitle}";
+    
+    // Step 2: Process
+    const result = \`Mastering \${topic}!\`;
+    
+    // Step 3: Output
+    return result;
+}
+
+// Run the example
+demonstrate${lessonTitle.replace(/\s+/g, '')}();
+\`\`\`
+
+### 📺 Video Resource
+
+📺 [Watch: ${lessonTitle} Tutorial](https://www.youtube.com/results?search_query=${encodeURIComponent(lessonTitle + ' tutorial')})
+
+### ✅ Key Takeaways
+
+- ${lessonTitle} is essential for building a strong foundation
+- Practice regularly to reinforce your understanding
+- Apply what you learn to real projects
+- Don't hesitate to revisit this lesson as needed
+- Connect with the community for additional support
+
+### 🔗 External Resources
+
+- [MDN Web Docs](https://developer.mozilla.org)
+- [FreeCodeCamp](https://www.freecodecamp.org)
+- [W3Schools](https://www.w3schools.com)
+
+### ❓ Self-Assessment
+
+> **Question:** What are the three key principles of ${lessonTitle}?
+> 
+> **Answer:** Foundation, Practice, and Application!
+
+---
+
+*Continue to the next lesson to build on these concepts.*`;
+}
+
 export const aiCourseGenerator = {
     generateCourse: async (userGoal, preferences = {}) => {
         try {
@@ -50,6 +179,7 @@ IMPORTANT: Respond ONLY with valid JSON matching this schema:
 
             let courseData;
             let modelUsed = MODELS[0];
+            let useLocalFallback = false;
 
             // Try models in sequence if one fails
             for (const model of MODELS) {
@@ -66,9 +196,12 @@ IMPORTANT: Respond ONLY with valid JSON matching this schema:
                     modelUsed = model;
                     break;
                 } catch (modelError) {
-                    console.warn(`Model ${model} failed, trying next...`, modelError.message);
+                    console.warn(`Model ${model} failed:`, modelError.message);
                     if (model === MODELS[MODELS.length - 1]) {
-                        throw modelError; // All models failed
+                        // All models failed - use local fallback
+                        console.log('All AI models failed, using local course template...');
+                        useLocalFallback = true;
+                        courseData = generateLocalCourse(userGoal);
                     }
                 }
             }
@@ -167,32 +300,22 @@ A hands-on task the learner should complete.
 IMPORTANT: Return ONLY raw Markdown content. Make it visually rich and engaging!`;
 
                     let lessonContent;
-                    try {
-                        const contentCompletion = await groq.chat.completions.create({
-                            messages: [{ role: "user", content: contentPrompt }],
-                            model: modelUsed,
-                            temperature: 0.5
-                        });
-                        lessonContent = contentCompletion.choices[0]?.message?.content || '';
-                    } catch (contentError) {
-                        console.warn('Lesson content generation failed, using placeholder');
-                        lessonContent = `## ${lessonInfo.title}
 
-Welcome to this lesson on **${lessonInfo.title}**!
-
-### What You'll Learn
-In this lesson, you will explore the key concepts and practical applications related to ${lessonInfo.title}.
-
-### Core Concepts
-This lesson covers fundamental principles that will help you understand and apply ${lessonInfo.title} effectively.
-
-### Key Takeaways
-- Understanding the basics of ${lessonInfo.title}
-- Practical applications you can use immediately
-- Best practices and common patterns
-
-### Next Steps
-Continue to the next lesson to build on these concepts.`;
+                    // If using local fallback, skip AI content generation
+                    if (useLocalFallback) {
+                        lessonContent = generateLocalLessonContent(lessonInfo.title, moduleData.title, courseData.title);
+                    } else {
+                        try {
+                            const contentCompletion = await groq.chat.completions.create({
+                                messages: [{ role: "user", content: contentPrompt }],
+                                model: modelUsed,
+                                temperature: 0.5
+                            });
+                            lessonContent = contentCompletion.choices[0]?.message?.content || '';
+                        } catch (contentError) {
+                            console.warn('Lesson content generation failed, using local content');
+                            lessonContent = generateLocalLessonContent(lessonInfo.title, moduleData.title, courseData.title);
+                        }
                     }
 
                     // Small delay to respect rate limits
