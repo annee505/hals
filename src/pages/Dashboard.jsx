@@ -236,8 +236,8 @@ const Dashboard = () => {
                             </button>
                         </div>
 
-                        <GamificationPanel stats={gamificationStats} badges={badges} />
-                        <AnalyticsPanel stats={stats} />
+                        {gamificationStats && <GamificationPanel stats={gamificationStats} badges={badges} />}
+                        {stats && <AnalyticsPanel stats={stats} />}
                     </div>
                 </div>
             </main>
