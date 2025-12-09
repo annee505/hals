@@ -2,15 +2,30 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authService } from '../services/auth';
+import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, Sparkles } from 'lucide-react';
 
 const Login = () => {
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
     const [error, setError] = useState('');
+
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (user) {
+            // Check if profile is complete (optional, or just go to dashboard)
+            if (!user.goal || !user.hobbies) {
+                navigate('/profile-setup');
+            } else {
+                navigate('/dashboard');
+            }
+        }
+    }, [user, navigate]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,14 +36,8 @@ const Login = () => {
         setError('');
 
         try {
-            const user = await authService.login(formData.email, formData.password);
-
-            // Check if profile is complete
-            if (!user.goal || !user.hobbies) {
-                navigate('/profile-setup');
-            } else {
-                navigate('/dashboard');
-            }
+            await authService.login(formData.email, formData.password);
+            // Do NOT navigate here. Wait for AuthContext to update and trigger useEffect.
         } catch (err) {
             setError(err.message);
         }
