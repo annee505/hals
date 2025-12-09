@@ -14,7 +14,7 @@ const Login = () => {
     });
     const [error, setError] = useState('');
 
-    const [error, setError] = useState('');
+
 
     useEffect(() => {
         if (user) {
