@@ -29,14 +29,15 @@ export const AuthProvider = ({ children }) => {
                     }
 
                     // Fallback to session data if profile is missing
+                    const safeProfile = profile || {};
                     setUser({
-                        ...session.user, // Use basic auth data
-                        ...profile,      // Overlay DB profile if exists
+                        ...session.user,
+                        ...safeProfile, // Safe spread
                         id: session.user.id,
                         email: session.user.email,
-                        name: profile?.name || session.user.email.split('@')[0], // Fallback name
-                        goal: profile?.goal || '',
-                        hobbies: profile?.hobbies || ''
+                        name: safeProfile.name || session.user.email?.split('@')[0] || 'User',
+                        goal: safeProfile.goal || '',
+                        hobbies: safeProfile.hobbies || ''
                     });
                 }
             } catch (error) {
@@ -59,14 +60,15 @@ export const AuthProvider = ({ children }) => {
                         console.warn('Profile fetch failed during auth change, using fallback:', dbError);
                     }
 
+                    const safeProfile = profile || {};
                     setUser({
                         ...session.user,
-                        ...profile,
+                        ...safeProfile,
                         id: session.user.id,
                         email: session.user.email,
-                        name: profile?.name || session.user.email.split('@')[0],
-                        goal: profile?.goal || '',
-                        hobbies: profile?.hobbies || ''
+                        name: safeProfile.name || session.user.email?.split('@')[0] || 'User',
+                        goal: safeProfile.goal || '',
+                        hobbies: safeProfile.hobbies || ''
                     });
                 } else {
                     setUser(null);
