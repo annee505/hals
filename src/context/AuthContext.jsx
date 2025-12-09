@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '../services/supabase-config';
 import { database } from '../services/database';
+import { authService } from '../services/auth';
 
 const AuthContext = createContext({});
 
@@ -18,22 +19,33 @@ export const AuthProvider = ({ children }) => {
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (session?.user) {
+                    // Try to fetch full profile from the users table
                     let profile = null;
                     try {
                         profile = await database.findUserByEmail(session.user.email);
                     } catch (dbError) {
-                        console.warn('Profile fetch failed, using fallback:', dbError);
+                        console.warn('Profile fetch failed:', dbError);
                     }
 
-                    const safeProfile = profile || {};
+                    // If no profile exists in database, user was deleted - sign them out
+                    if (!profile) {
+                        console.log('User no longer exists in database, signing out...');
+                        authService.logout(); // Clear localStorage
+                        await supabase.auth.signOut();
+                        setUser(null);
+                        setLoading(false);
+                        return;
+                    }
+
+                    // User exists, set the user state
                     setUser({
                         ...session.user,
-                        ...safeProfile,
+                        ...profile,
                         id: session.user.id,
                         email: session.user.email,
-                        name: safeProfile.name || session.user.email?.split('@')[0] || 'User',
-                        goal: safeProfile.goal || '',
-                        hobbies: safeProfile.hobbies || ''
+                        name: profile.name || session.user.email?.split('@')[0] || 'User',
+                        goal: profile.goal || '',
+                        hobbies: profile.hobbies || ''
                     });
                 }
             } catch (error) {
@@ -53,18 +65,28 @@ export const AuthProvider = ({ children }) => {
                     try {
                         profile = await database.findUserByEmail(session.user.email);
                     } catch (dbError) {
-                        console.warn('Profile fetch failed during auth change, using fallback:', dbError);
+                        console.warn('Profile fetch failed during auth change:', dbError);
                     }
 
-                    const safeProfile = profile || {};
+                    // If no profile exists in database, user was deleted - sign them out
+                    if (!profile) {
+                        console.log('User no longer exists in database, signing out...');
+                        authService.logout(); // Clear localStorage
+                        await supabase.auth.signOut();
+                        setUser(null);
+                        setLoading(false);
+                        return;
+                    }
+
+                    // User exists, set the user state
                     setUser({
                         ...session.user,
-                        ...safeProfile,
+                        ...profile,
                         id: session.user.id,
                         email: session.user.email,
-                        name: safeProfile.name || session.user.email?.split('@')[0] || 'User',
-                        goal: safeProfile.goal || '',
-                        hobbies: safeProfile.hobbies || ''
+                        name: profile.name || session.user.email?.split('@')[0] || 'User',
+                        goal: profile.goal || '',
+                        hobbies: profile.hobbies || ''
                     });
                 } else {
                     setUser(null);

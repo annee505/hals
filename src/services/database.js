@@ -84,12 +84,17 @@ export const database = {
             throw new Error('Authentication failed');
         }
 
-        const user = await database.findUserByEmail(email);
-        if (!user) {
-            throw new Error('User profile not found');
+        // Return the user profile from our table
+        const profile = await database.findUserByEmail(email);
+
+        // If user authenticated but profile doesn't exist, they were deleted from the database
+        if (!profile) {
+            // Sign them out of Supabase Auth
+            await supabase.auth.signOut();
+            throw new Error('Your account no longer exists. Please sign up again.');
         }
 
-        return user;
+        return profile;
     },
 
     updateUserProfile: async (userId, profileData) => {

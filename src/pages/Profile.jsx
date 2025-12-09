@@ -198,7 +198,7 @@ const Profile = () => {
                             key={enrollment.id}
                             whileHover={{ y: -4 }}
                             className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden cursor-pointer"
-                            onClick={() => navigate(`/course/${enrollment.courseId}`)}
+                            onClick={() => navigate(`/course/${enrollment.course_id}`)}
                         >
                             <div className="h-32 bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center">
                                 <BookOpen className="w-12 h-12 text-white opacity-80" />

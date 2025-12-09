@@ -28,6 +28,7 @@ const Dashboard = () => {
     const [badges, setBadges] = useState([]);
     const [newBadges, setNewBadges] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
 
     // AI Generation State
     const [showGenerator, setShowGenerator] = useState(false);
