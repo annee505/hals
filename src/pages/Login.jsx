@@ -31,15 +31,19 @@ const Login = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const [loading, setLoading] = useState(false);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
 
         try {
             await authService.login(formData.email, formData.password);
-            // Do NOT navigate here. Wait for AuthContext to update and trigger useEffect.
+            // AuthContext will handle navigation via useEffect
         } catch (err) {
             setError(err.message);
+            setLoading(false);
         }
     };
 
@@ -116,9 +120,17 @@ const Login = () => {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             type="submit"
-                            className="w-full bg-gradient-to-r from-primary to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                            disabled={loading}
+                            className="w-full bg-gradient-to-r from-primary to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
                         >
-                            Log In
+                            {loading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                                    Logging in...
+                                </>
+                            ) : (
+                                'Log In'
+                            )}
                         </motion.button>
                     </form>
 

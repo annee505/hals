@@ -20,14 +20,27 @@ export const AuthProvider = ({ children }) => {
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (session?.user) {
-                    // Fetch full profile
-                    const profile = await database.findUserByEmail(session.user.email);
-                    setUser({ ...profile, id: session.user.id }); // Ensure ID is present
+                    // Try to fetch full profile, but don't fail if missing
+                    let profile = null;
+                    try {
+                        profile = await database.findUserByEmail(session.user.email);
+                    } catch (dbError) {
+                        console.warn('Profile fetch failed, using fallback:', dbError);
+                    }
+
+                    // Fallback to session data if profile is missing
+                    setUser({
+                        ...session.user, // Use basic auth data
+                        ...profile,      // Overlay DB profile if exists
+                        id: session.user.id,
+                        email: session.user.email,
+                        name: profile?.name || session.user.email.split('@')[0], // Fallback name
+                        goal: profile?.goal || '',
+                        hobbies: profile?.hobbies || ''
+                    });
                 }
             } catch (error) {
                 console.error('Error checking session:', error);
-                // Ensure we don't block app if session check fails
-                setLoading(false);
             } finally {
                 setLoading(false);
             }
@@ -39,8 +52,22 @@ export const AuthProvider = ({ children }) => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             try {
                 if (session?.user) {
-                    const profile = await database.findUserByEmail(session.user.email);
-                    setUser({ ...profile, id: session.user.id });
+                    let profile = null;
+                    try {
+                        profile = await database.findUserByEmail(session.user.email);
+                    } catch (dbError) {
+                        console.warn('Profile fetch failed during auth change, using fallback:', dbError);
+                    }
+
+                    setUser({
+                        ...session.user,
+                        ...profile,
+                        id: session.user.id,
+                        email: session.user.email,
+                        name: profile?.name || session.user.email.split('@')[0],
+                        goal: profile?.goal || '',
+                        hobbies: profile?.hobbies || ''
+                    });
                 } else {
                     setUser(null);
                 }

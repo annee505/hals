@@ -12,6 +12,7 @@ const Signup = () => {
         password: '',
         confirmPassword: ''
     });
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const handleChange = (e) => {
@@ -21,15 +22,18 @@ const Signup = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
 
         // Validation
         if (formData.password !== formData.confirmPassword) {
             setError('Passwords do not match');
+            setLoading(false);
             return;
         }
 
         if (formData.password.length < 6) {
             setError('Password must be at least 6 characters');
+            setLoading(false);
             return;
         }
 
@@ -37,9 +41,16 @@ const Signup = () => {
             await authService.signup(formData.email, formData.password, {
                 name: formData.name
             });
+            // Don't navigate immediately, wait for auth listener or let user check email if required
+            // But since we auto-login usually, we can go to setup
             navigate('/profile-setup');
         } catch (err) {
-            setError(err.message);
+            if (err.message.includes('already registered')) {
+                setError('This email is already registered. Please log in instead.');
+            } else {
+                setError(err.message);
+            }
+            setLoading(false);
         }
     };
 
@@ -150,9 +161,17 @@ const Signup = () => {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             type="submit"
-                            className="w-full bg-gradient-to-r from-primary to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                            disabled={loading}
+                            className="w-full bg-gradient-to-r from-primary to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
                         >
-                            Sign Up
+                            {loading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
+                                    Creating Account...
+                                </>
+                            ) : (
+                                'Sign Up'
+                            )}
                         </motion.button>
                     </form>
 
