@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { database } from '../services/database';
 import { authService } from '../services/auth';
 import CourseCard from '../components/CourseCard';
+import CourseSkeleton from '../components/CourseSkeleton';
 import CoursePreviewModal from '../components/CoursePreviewModal';
 import ThemeToggle from '../components/ThemeToggle';
 import { Sparkles, TrendingUp, Award, ArrowRight } from 'lucide-react';
@@ -14,6 +15,7 @@ const Home = () => {
     const [courses, setCourses] = useState([]);
     const [recommendedCourses, setRecommendedCourses] = useState([]);
     const [previewCourse, setPreviewCourse] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const loadData = async () => {
@@ -32,6 +34,8 @@ const Home = () => {
                 }
             } catch (error) {
                 console.error("Error loading courses:", error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -196,21 +200,28 @@ const Home = () => {
                             All Courses
                         </h2>
                         <p className="text-gray-600 dark:text-gray-300 text-lg">
-                            {courses.length} courses available - Choose as many as you like!
+                            {loading ? 'Finding the best courses for you...' : `${courses.length} courses available - Choose as many as you like!`}
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {courses.map((course, i) => (
-                            <motion.div
-                                key={course.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.02 }}
-                            >
-                                <CourseCard course={course} onEnroll={handleEnroll} />
-                            </motion.div>
-                        ))}
+                        {loading ? (
+                            // Show 8 skeletons while loading
+                            Array(8).fill(0).map((_, i) => (
+                                <CourseSkeleton key={i} />
+                            ))
+                        ) : (
+                            courses.map((course, i) => (
+                                <motion.div
+                                    key={course.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: i * 0.02 }}
+                                >
+                                    <CourseCard course={course} onEnroll={handleEnroll} />
+                                </motion.div>
+                            ))
+                        )}
                     </div>
                 </div>
             </section>
