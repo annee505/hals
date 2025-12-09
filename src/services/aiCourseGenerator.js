@@ -1,212 +1,204 @@
 import Groq from 'groq-sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { supabase } from './supabase-config';
 
-const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
+const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-// Alternative free models in order of preference
-const MODELS = [
+// Groq models to try
+const GROQ_MODELS = [
     'llama-3.3-70b-versatile',
     'llama-3.1-70b-versatile',
     'mixtral-8x7b-32768',
     'llama3-70b-8192'
 ];
 
-// Fallback function when AI API hits rate limits
+// Generate local course when all APIs fail
 function generateLocalCourse(userGoal) {
     return {
         title: `Master ${userGoal}`,
-        description: `A comprehensive course designed to help you master ${userGoal}. This structured learning path covers fundamentals to advanced topics, with practical exercises and real-world applications.`,
+        description: `A comprehensive course designed to help you master ${userGoal}. This structured learning path covers fundamentals to advanced topics.`,
         difficulty: "Beginner",
         duration: "6 weeks",
         tags: [userGoal.split(' ')[0], "Learning", "Skills"],
         modules: [
             {
                 title: "Getting Started",
-                description: `Introduction to ${userGoal} fundamentals`,
+                description: `Introduction to ${userGoal}`,
                 lessons: [
                     { title: `What is ${userGoal}?`, duration: "15 min" },
-                    { title: "Setting Up Your Environment", duration: "20 min" },
-                    { title: "Key Concepts Overview", duration: "25 min" },
-                    { title: "Your First Project", duration: "30 min" }
+                    { title: "Setting Up", duration: "20 min" },
+                    { title: "Key Concepts", duration: "25 min" },
+                    { title: "First Project", duration: "30 min" }
                 ]
             },
             {
                 title: "Core Fundamentals",
-                description: `Deep dive into ${userGoal} basics`,
+                description: `Deep dive into ${userGoal}`,
                 lessons: [
-                    { title: "Understanding the Basics", duration: "25 min" },
+                    { title: "Understanding Basics", duration: "25 min" },
                     { title: "Common Patterns", duration: "30 min" },
                     { title: "Best Practices", duration: "25 min" },
-                    { title: "Practical Exercises", duration: "40 min" }
+                    { title: "Exercises", duration: "40 min" }
                 ]
             },
             {
-                title: "Intermediate Techniques",
-                description: `Building on your ${userGoal} skills`,
+                title: "Intermediate",
+                description: `Building ${userGoal} skills`,
                 lessons: [
                     { title: "Advanced Concepts", duration: "30 min" },
                     { title: "Problem Solving", duration: "35 min" },
-                    { title: "Real-World Applications", duration: "30 min" },
+                    { title: "Real Applications", duration: "30 min" },
                     { title: "Case Study", duration: "45 min" }
                 ]
             },
             {
-                title: "Mastery & Projects",
-                description: `Becoming proficient in ${userGoal}`,
+                title: "Mastery",
+                description: `Becoming proficient`,
                 lessons: [
-                    { title: "Final Project Planning", duration: "20 min" },
-                    { title: "Building the Project", duration: "60 min" },
-                    { title: "Review & Optimization", duration: "30 min" },
-                    { title: "Next Steps & Resources", duration: "15 min" }
+                    { title: "Project Planning", duration: "20 min" },
+                    { title: "Building Project", duration: "60 min" },
+                    { title: "Optimization", duration: "30 min" },
+                    { title: "Next Steps", duration: "15 min" }
                 ]
             }
         ]
     };
 }
 
-// Generate rich local lesson content
+// Generate rich lesson content locally
 function generateLocalLessonContent(lessonTitle, moduleName, courseName) {
     return `## ${lessonTitle}
 
-Welcome to this lesson on **${lessonTitle}**! This is part of the "${moduleName}" module in our "${courseName}" course.
+Welcome to **${lessonTitle}**! Part of "${moduleName}" in "${courseName}".
 
 ### 📚 Introduction
-
-In this lesson, you will learn the essential concepts and practical applications of ${lessonTitle}. Understanding these fundamentals is crucial for your journey to mastering this subject.
+This lesson covers essential concepts and practical applications of ${lessonTitle}.
 
 ### 🎯 Learning Objectives
-
-By the end of this lesson, you will be able to:
-- Understand the core principles of ${lessonTitle}
-- Apply these concepts in real-world scenarios
+- Understand core principles of ${lessonTitle}
+- Apply concepts in real-world scenarios
 - Build confidence in your abilities
 
 ### 📖 Core Concepts
-
-${lessonTitle} is a fundamental topic that forms the foundation for more advanced concepts. Let's break it down:
-
 **Key Points:**
-1. **Foundation** - Understanding the basics gives you a solid starting point
-2. **Practice** - Regular practice reinforces your learning
-3. **Application** - Real-world application helps cement your knowledge
+1. **Foundation** - Understanding basics gives you a solid start
+2. **Practice** - Regular practice reinforces learning
+3. **Application** - Real-world application cements knowledge
 
 ### 💻 Code Example
-
 \`\`\`javascript
-// Example code for ${lessonTitle}
-function demonstrate${lessonTitle.replace(/\s+/g, '')}() {
+// Example for ${lessonTitle}
+function example() {
     console.log("Learning: ${lessonTitle}");
-    
-    // Step 1: Initialize
-    const topic = "${lessonTitle}";
-    
-    // Step 2: Process
-    const result = \`Mastering \${topic}!\`;
-    
-    // Step 3: Output
-    return result;
+    return "Mastering " + "${lessonTitle}";
 }
-
-// Run the example
-demonstrate${lessonTitle.replace(/\s+/g, '')}();
+example();
 \`\`\`
 
 ### 📺 Video Resource
-
-📺 [Watch: ${lessonTitle} Tutorial](https://www.youtube.com/results?search_query=${encodeURIComponent(lessonTitle + ' tutorial')})
+📺 [Watch Tutorial](https://www.youtube.com/results?search_query=${encodeURIComponent(lessonTitle)})
 
 ### ✅ Key Takeaways
-
-- ${lessonTitle} is essential for building a strong foundation
-- Practice regularly to reinforce your understanding
+- ${lessonTitle} is essential for building a foundation
+- Practice regularly to reinforce understanding
 - Apply what you learn to real projects
-- Don't hesitate to revisit this lesson as needed
-- Connect with the community for additional support
+- Revisit this lesson as needed
+- Connect with the community
 
 ### 🔗 External Resources
-
 - [MDN Web Docs](https://developer.mozilla.org)
 - [FreeCodeCamp](https://www.freecodecamp.org)
 - [W3Schools](https://www.w3schools.com)
 
 ### ❓ Self-Assessment
+> **Question:** What are the three key principles?
+> **Answer:** Foundation, Practice, and Application!`;
+}
 
-> **Question:** What are the three key principles of ${lessonTitle}?
-> 
-> **Answer:** Foundation, Practice, and Application!
+// Try to generate with Gemini
+async function tryGemini(prompt) {
+    if (!geminiApiKey) return null;
 
----
+    try {
+        const genAI = new GoogleGenerativeAI(geminiApiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const result = await model.generateContent(prompt);
+        return result.response.text();
+    } catch (error) {
+        console.warn('Gemini failed:', error.message);
+        return null;
+    }
+}
 
-*Continue to the next lesson to build on these concepts.*`;
+// Try to generate with Groq
+async function tryGroq(prompt, jsonMode = false) {
+    if (!groqApiKey) return null;
+
+    const groq = new Groq({ apiKey: groqApiKey, dangerouslyAllowBrowser: true });
+
+    for (const model of GROQ_MODELS) {
+        try {
+            const options = {
+                messages: [{ role: "user", content: prompt }],
+                model: model,
+                temperature: 0.5
+            };
+            if (jsonMode) {
+                options.response_format = { type: "json_object" };
+            }
+            const completion = await groq.chat.completions.create(options);
+            return completion.choices[0]?.message?.content;
+        } catch (error) {
+            console.warn(`Groq ${model} failed:`, error.message);
+        }
+    }
+    return null;
 }
 
 export const aiCourseGenerator = {
     generateCourse: async (userGoal, preferences = {}) => {
         try {
-            if (!apiKey) throw new Error("Missing Groq API Key");
-
-            const groq = new Groq({ apiKey, dangerouslyAllowBrowser: true });
-
-            // Step 1: Generate course outline
-            const outlinePrompt = `Create a world-class, comprehensive learning course on "${userGoal}".
-User preferences: ${JSON.stringify(preferences)}
-
-Generate a course structure with:
-- Course title and description (detailed, engaging)
-- Difficulty level (Beginner, Intermediate, or Advanced)
-- Estimated duration (e.g., "8 weeks")
-- Tags (relevant keywords)
-- 4 modules with descriptive titles and descriptions
-- 4 lessons per module (just titles and durations for now)
-
-IMPORTANT: Respond ONLY with valid JSON matching this schema:
+            const outlinePrompt = `Create a comprehensive learning course on "${userGoal}".
+Generate a course with 4 modules, 4 lessons each.
+RESPOND ONLY WITH JSON:
 {
   "title": "Course Title",
-  "description": "Course description",
+  "description": "Description",
   "difficulty": "Beginner",
-  "duration": "8 weeks",
+  "duration": "6 weeks",
   "tags": ["tag1", "tag2"],
-  "modules": [
-    {
-      "title": "Module Title",
-      "description": "Module description",
-      "lessons": [
-        { "title": "Lesson Title", "duration": "15 min" }
-      ]
-    }
-  ]
+  "modules": [{"title": "Module", "description": "Desc", "lessons": [{"title": "Lesson", "duration": "15 min"}]}]
 }`;
 
-            let courseData;
-            let modelUsed = MODELS[0];
-            let useLocalFallback = false;
+            // Try Groq first, then Gemini, then local
+            let courseData = null;
+            let responseText = await tryGroq(outlinePrompt, true);
 
-            // Try models in sequence if one fails
-            for (const model of MODELS) {
+            if (!responseText) {
+                console.log('Groq failed, trying Gemini...');
+                responseText = await tryGemini(outlinePrompt + "\nRespond ONLY with valid JSON, no markdown.");
+            }
+
+            if (responseText) {
                 try {
-                    const completion = await groq.chat.completions.create({
-                        messages: [{ role: "user", content: outlinePrompt }],
-                        model: model,
-                        temperature: 0.5,
-                        response_format: { type: "json_object" }
-                    });
-
-                    const responseText = completion.choices[0]?.message?.content || "{}";
-                    courseData = JSON.parse(responseText);
-                    modelUsed = model;
-                    break;
-                } catch (modelError) {
-                    console.warn(`Model ${model} failed:`, modelError.message);
-                    if (model === MODELS[MODELS.length - 1]) {
-                        // All models failed - use local fallback
-                        console.log('All AI models failed, using local course template...');
-                        useLocalFallback = true;
-                        courseData = generateLocalCourse(userGoal);
+                    // Clean markdown code blocks if present
+                    let cleaned = responseText.trim();
+                    if (cleaned.startsWith('```')) {
+                        cleaned = cleaned.replace(/```json?\n?/g, '').replace(/```$/g, '');
                     }
+                    courseData = JSON.parse(cleaned);
+                } catch (e) {
+                    console.warn('Failed to parse AI response:', e);
                 }
             }
 
-            // Save course to Supabase first
+            if (!courseData) {
+                console.log('All AI failed, using local template...');
+                courseData = generateLocalCourse(userGoal);
+            }
+
+            // Save course to Supabase
             const { data: course, error: courseError } = await supabase
                 .from('courses')
                 .insert({
@@ -224,16 +216,16 @@ IMPORTANT: Respond ONLY with valid JSON matching this schema:
 
             if (courseError) throw courseError;
 
-            // Step 2: Generate RICH content for each lesson
+            // Save modules and lessons
             for (let i = 0; i < courseData.modules.length; i++) {
-                const moduleData = courseData.modules[i];
+                const mod = courseData.modules[i];
 
-                const { data: module, error: moduleError } = await supabase
+                const { data: moduleData, error: moduleError } = await supabase
                     .from('modules')
                     .insert({
                         course_id: course.id,
-                        title: moduleData.title,
-                        description: moduleData.description,
+                        title: mod.title,
+                        description: mod.description,
                         order_index: i
                     })
                     .select()
@@ -241,103 +233,40 @@ IMPORTANT: Respond ONLY with valid JSON matching this schema:
 
                 if (moduleError) throw moduleError;
 
-                // Generate rich content for each lesson
-                for (let j = 0; j < moduleData.lessons.length; j++) {
-                    const lessonInfo = moduleData.lessons[j];
+                for (let j = 0; j < mod.lessons.length; j++) {
+                    const lesson = mod.lessons[j];
 
-                    // Generate rich lesson content
-                    const contentPrompt = `Write COMPREHENSIVE, WORLD-CLASS lesson content for "${lessonInfo.title}"
-from the module "${moduleData.title}" in the course "${courseData.title}".
+                    // Generate lesson content
+                    const contentPrompt = `Write 600+ words lesson content for "${lesson.title}" in course "${courseData.title}".
+Include: Introduction, Core Concepts, Code Example, Video link, Key Takeaways, External Resources.
+Use rich Markdown formatting.`;
 
-CRITICAL REQUIREMENTS - MUST INCLUDE ALL OF THESE:
-1. LENGTH: 800-1200 words minimum
-2. FORMAT: Rich Markdown with proper hierarchy
-
-MANDATORY SECTIONS:
-
-## Introduction
-2-3 paragraphs explaining what this lesson covers and why it matters.
-
-## Core Concepts
-Detailed explanations with:
-- **Bold** key terms
-- Bullet points for lists
-- Numbered steps for processes
-
-## Code Example
-\`\`\`javascript
-// Include a real, working code example
-// relevant to this lesson's topic
-function example() {
-  // Show practical implementation
-}
-\`\`\`
-
-## Visual Learning
-Include a relevant image using markdown:
-![Diagram explaining ${lessonInfo.title}](https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800)
-
-## Video Resource
-**Must include a real YouTube video link:**
-📺 [Watch: ${lessonInfo.title} Tutorial](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
-
-## Practical Exercise
-A hands-on task the learner should complete.
-
-## Key Takeaways
-- 5 bullet points summarizing the lesson
-- Make them actionable
-
-## External Resources
-- [Resource 1](https://developer.mozilla.org)
-- [Resource 2](https://www.freecodecamp.org)
-- [Resource 3](https://www.w3schools.com)
-
-## Quiz Yourself
-> **Question:** Ask a review question about the content
-> **Answer:** Provide the answer
-
-IMPORTANT: Return ONLY raw Markdown content. Make it visually rich and engaging!`;
-
-                    let lessonContent;
-
-                    // If using local fallback, skip AI content generation
-                    if (useLocalFallback) {
-                        lessonContent = generateLocalLessonContent(lessonInfo.title, moduleData.title, courseData.title);
-                    } else {
-                        try {
-                            const contentCompletion = await groq.chat.completions.create({
-                                messages: [{ role: "user", content: contentPrompt }],
-                                model: modelUsed,
-                                temperature: 0.5
-                            });
-                            lessonContent = contentCompletion.choices[0]?.message?.content || '';
-                        } catch (contentError) {
-                            console.warn('Lesson content generation failed, using local content');
-                            lessonContent = generateLocalLessonContent(lessonInfo.title, moduleData.title, courseData.title);
-                        }
+                    let content = await tryGroq(contentPrompt);
+                    if (!content) {
+                        content = await tryGemini(contentPrompt);
+                    }
+                    if (!content) {
+                        content = generateLocalLessonContent(lesson.title, mod.title, courseData.title);
                     }
 
-                    // Small delay to respect rate limits
-                    await new Promise(resolve => setTimeout(resolve, 300));
-
-                    const { error: lessonError } = await supabase
+                    await supabase
                         .from('lessons')
                         .insert({
-                            module_id: module.id,
-                            title: lessonInfo.title,
-                            content: lessonContent,
-                            duration: lessonInfo.duration,
+                            module_id: moduleData.id,
+                            title: lesson.title,
+                            content: content,
+                            duration: lesson.duration,
                             order_index: j
                         });
 
-                    if (lessonError) throw lessonError;
+                    // Small delay
+                    await new Promise(r => setTimeout(r, 200));
                 }
             }
 
             return course;
         } catch (error) {
-            console.error('Error generating course:', error);
+            console.error('Course generation error:', error);
             throw error;
         }
     }
