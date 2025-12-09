@@ -26,7 +26,7 @@ const Dashboard = () => {
     const [gamificationStats, setGamificationStats] = useState(null);
     const [badges, setBadges] = useState([]);
     const [newBadges, setNewBadges] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [loading, setLoading] = useState(true);
 
     // AI Generation State
     const [showGenerator, setShowGenerator] = useState(false);
@@ -42,28 +42,19 @@ const Dashboard = () => {
             }
             setUser(currentUser);
 
-            // Load personalized data
-            const userCurriculum = curriculumService.generateCurriculum(currentUser);
-            const userStats = curriculumService.getAnalytics();
-
-            setCurriculum(userCurriculum);
-            setStats(userStats);
-
-            // Load gamification data
-            const gamStats = gamificationService.updateStreak();
-            setGamificationStats(gamStats);
-            setBadges(gamificationService.getBadges());
-
-            // Load enrollments from Supabase to replace mock curriculum
             try {
+                // Initialize default empty structure for immediate render
+                setCurriculum([]);
+                setStats(curriculumService.getAnalytics());
+                if (gamificationService) {
+                    setGamificationStats(gamificationService.updateStreak());
+                    setBadges(gamificationService.getBadges());
+                }
+
+                // Load real enrollments (Async)
                 const enrollments = await database.getUserEnrollments(currentUser.id);
 
                 if (enrollments && enrollments.length > 0) {
-                    // map enrollments to curriculum format
-                    // Section = Enrolled Course
-                    // Modules = ? (We need to fetch modules for each course or assume active one)
-                    // For now, let's treat each enrolled course as a "Section" in the view
-
                     const newCurriculum = enrollments.map(enrollment => ({
                         id: enrollment.course.id,
                         title: enrollment.course.title,
@@ -76,18 +67,11 @@ const Dashboard = () => {
                         ]
                     }));
                     setCurriculum(newCurriculum);
-                } else {
-                    // If no enrollments, show recommended as a "suggested" path? 
-                    // Or keep empty to encourage enrollment
-                    setCurriculum([]);
                 }
-
-                // Load stats based on real data if possible, or keep mock for gamification for now
-                const userStats = curriculumService.getAnalytics();
-                setStats(userStats);
-
             } catch (error) {
-                console.error("Error loading enrollments:", error);
+                console.error("Error loading dashboard data:", error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -137,7 +121,8 @@ const Dashboard = () => {
         }
     };
 
-    if (!user || !stats || !gamificationStats) return (
+    // If user is not yet set (should be rare due to AuthContext), show simple loader
+    if (!user) return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -213,11 +198,23 @@ const Dashboard = () => {
                         </div>
 
                         {/* Filtered Curriculum View */}
-                        <CurriculumView
-                            curriculum={curriculum.filter(c =>
-                                c.title.toLowerCase().includes(searchTerm.toLowerCase())
-                            )}
-                        />
+                        {loading ? (
+                            <div className="space-y-4">
+                                {Array(3).fill(0).map((_, i) => (
+                                    <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 animate-pulse">
+                                        <div className="h-6 w-1/3 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+                                        <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                                        <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <CurriculumView
+                                curriculum={curriculum.filter(c =>
+                                    c.title.toLowerCase().includes(searchTerm.toLowerCase())
+                                )}
+                            />
+                        )}
                     </div>
 
                     {/* Sidebar: Analytics & Gamification */}
