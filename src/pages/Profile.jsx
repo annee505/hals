@@ -7,7 +7,6 @@ import { database } from '../services/database';
 import ThemeToggle from '../components/ThemeToggle';
 import { Edit, BookOpen, Award, Target } from 'lucide-react';
 
-import { useAuth } from '../context/AuthContext';
 // ...
 
 const Profile = () => {
