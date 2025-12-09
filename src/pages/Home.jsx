@@ -16,6 +16,7 @@ const Home = () => {
     const [recommendedCourses, setRecommendedCourses] = useState([]);
     const [previewCourse, setPreviewCourse] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         const loadData = async () => {
@@ -195,13 +196,27 @@ const Home = () => {
             {/* All Courses Section */}
             <section className="py-16 bg-white dark:bg-gray-800">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-12">
+                    <div className="text-center mb-8">
                         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
                             All Courses
                         </h2>
-                        <p className="text-gray-600 dark:text-gray-300 text-lg">
+                        <p className="text-gray-600 dark:text-gray-300 text-lg mb-8">
                             {loading ? 'Finding the best courses for you...' : `${courses.length} courses available - Choose as many as you like!`}
                         </p>
+
+                        {/* Smart Search */}
+                        <div className="max-w-md mx-auto relative group">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Sparkles className="h-5 w-5 text-gray-400 group-focus-within:text-primary transition-colors" />
+                            </div>
+                            <input
+                                type="text"
+                                className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all shadow-sm hover:shadow-md"
+                                placeholder="Search courses (e.g. Python, Finance)..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -211,16 +226,21 @@ const Home = () => {
                                 <CourseSkeleton key={i} />
                             ))
                         ) : (
-                            courses.map((course, i) => (
-                                <motion.div
-                                    key={course.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.02 }}
-                                >
-                                    <CourseCard course={course} onEnroll={handleEnroll} />
-                                </motion.div>
-                            ))
+                            courses
+                                .filter(course =>
+                                    course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    course.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+                                )
+                                .map((course, i) => (
+                                    <motion.div
+                                        key={course.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.02 }}
+                                    >
+                                        <CourseCard course={course} onEnroll={handleEnroll} />
+                                    </motion.div>
+                                ))
                         )}
                     </div>
                 </div>

@@ -47,6 +47,25 @@ export default function QuizTaker({ quizId, userId, onClose }) {
             const attempt = await quizGenerator.submitQuizAttempt(userId, quizId, selectedAnswers);
             setResults(attempt);
             setShowResults(true);
+
+            if (attempt.percentage >= 70) {
+                // Success Sound & Confetti
+                const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3');
+                audio.play().catch(e => console.log('Audio play failed', e)); // Ignore interaction processing errors
+
+                import('canvas-confetti').then((confetti) => {
+                    confetti.default({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+                });
+            } else {
+                // Failure/Try Again Sound (Subtle)
+                const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-click-error-1110.mp3');
+                audio.play().catch(e => console.log('Audio play failed', e));
+            }
+
         } catch (error) {
             console.error('Error submitting quiz:', error);
         }
@@ -133,15 +152,15 @@ export default function QuizTaker({ quizId, userId, onClose }) {
                                             key={key}
                                             onClick={() => handleAnswerSelect(question.id, key)}
                                             className={`w-full text-left p-4 rounded-xl border-2 transition ${selectedAnswers[question.id] === key
-                                                    ? 'border-indigo-500 bg-indigo-50'
-                                                    : 'border-gray-200 hover:border-indigo-300'
+                                                ? 'border-indigo-500 bg-indigo-50'
+                                                : 'border-gray-200 hover:border-indigo-300'
                                                 }`}
                                         >
                                             <div className="flex items-center">
                                                 <div
                                                     className={`w-6 h-6 rounded-full border-2 mr-3 flex items-center justify-center ${selectedAnswers[question.id] === key
-                                                            ? 'border-indigo-500 bg-indigo-500'
-                                                            : 'border-gray-300'
+                                                        ? 'border-indigo-500 bg-indigo-500'
+                                                        : 'border-gray-300'
                                                         }`}
                                                 >
                                                     {selectedAnswers[question.id] === key && (

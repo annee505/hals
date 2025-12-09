@@ -78,17 +78,39 @@ const Profile = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-8"
                 >
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{user.name}</h2>
-                            <p className="text-gray-600 dark:text-gray-300">{user.email}</p>
+                    <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6 mb-6">
+                        <div className="relative group">
+                            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border-4 border-white dark:border-gray-700 shadow-lg">
+                                <img
+                                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`}
+                                    alt="Avatar"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
                         </div>
+
+                        <div className="flex-1 text-center md:text-left">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{user.name}</h2>
+                            <p className="text-gray-600 dark:text-gray-300 mb-2">{user.email}</p>
+
+                            <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                                <span className="px-3 py-1 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 rounded-full text-xs font-semibold">
+                                    🚀 Early Adopter
+                                </span>
+                                {enrollments.length > 2 && (
+                                    <span className="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 rounded-full text-xs font-semibold">
+                                        📚 Avid Learner
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
                         <button
                             onClick={() => setIsEditing(!isEditing)}
-                            className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                            className="flex items-center px-4 py-2 bg-white border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-gray-700 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                         >
                             <Edit className="w-4 h-4 mr-2" />
-                            {isEditing ? 'Cancel' : 'Edit'}
+                            {isEditing ? 'Cancel' : 'Edit Profile'}
                         </button>
                     </div>
 

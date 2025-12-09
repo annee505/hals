@@ -318,6 +318,22 @@ const CourseDetail = () => {
                         </button>
 
                         {/* Upload Materials */}
+                        {progressPercentage === 100 && (
+                            <button
+                                onClick={() => {
+                                    import('../services/certificate').then(({ certificateService }) => {
+                                        certificateService.generateCertificate(user.name, course.title);
+                                    });
+                                }}
+                                className="w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl p-4 hover:shadow-lg transition-all"
+                            >
+                                <Award className="w-6 h-6 mx-auto mb-2" />
+                                <p className="font-semibold">Download Certificate</p>
+                                <p className="text-sm opacity-90">You earned it!</p>
+                            </button>
+                        )}
+
+                        {/* Upload Materials */}
                         <button
                             onClick={() => setShowFileUpload(!showFileUpload)}
                             className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl p-4 hover:shadow-lg transition-all"
@@ -400,6 +416,17 @@ const CourseDetail = () => {
                                     className="w-full bg-gradient-to-r from-primary to-indigo-600 text-white py-4 rounded-2xl font-bold text-lg hover:shadow-xl hover:scale-[1.02] transition-all"
                                 >
                                     Awesome!
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        import('../services/certificate').then(({ certificateService }) => {
+                                            certificateService.generateCertificate(user.name, course.title);
+                                        });
+                                    }}
+                                    className="w-full mt-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-2 border-gray-200 dark:border-gray-600 py-4 rounded-2xl font-bold text-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all flex items-center justify-center"
+                                >
+                                    <Award className="w-5 h-5 mr-2 text-amber-500" />
+                                    Download Certificate
                                 </button>
                             </div>
                         </motion.div>
