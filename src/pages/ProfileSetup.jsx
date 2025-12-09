@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { database } from '../services/database';
 import { authService } from '../services/auth';
+import { Loader2 } from 'lucide-react';
 
 const ProfileSetup = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const [formData, setFormData] = useState({
         hobbies: '',
         learningStyle: 'visual',
@@ -14,6 +15,15 @@ const ProfileSetup = () => {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // Show loading while auth is checking
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
