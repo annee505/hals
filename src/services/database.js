@@ -3,7 +3,7 @@ import { supabase } from './supabase-config';
 export const database = {
     // User operations
     createUser: async (email, password, profile) => {
-        // 1. Sign up with Supabase Auth
+        // 1. Try to sign up with Supabase Auth
         const { data: authData, error: authError } = await supabase.auth.signUp({
             email,
             password,
@@ -17,6 +17,46 @@ export const database = {
                 }
             }
         });
+
+        // If user already exists in Auth, try to sign them in and recreate profile
+        if (authError && authError.message?.includes('already registered')) {
+            // Try to sign in with the provided credentials
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (signInError) {
+                throw new Error('This email is already registered. Please log in instead, or use a different password.');
+            }
+
+            // Check if profile exists in users table
+            const existingProfile = await database.findUserByEmail(email);
+            if (existingProfile) {
+                return existingProfile;
+            }
+
+            // Profile doesn't exist - recreate it (user was deleted from database but Auth remains)
+            const { data: newProfile, error: profileError } = await supabase
+                .from('users')
+                .insert({
+                    id: signInData.user.id,
+                    email: email,
+                    name: profile.name,
+                    hobbies: profile.hobbies || '',
+                    learning_style: profile.learningStyle || 'visual',
+                    goal: profile.goal || ''
+                })
+                .select()
+                .single();
+
+            if (profileError) {
+                console.error('Error recreating profile:', profileError);
+                throw new Error('Failed to create user profile. Please try again.');
+            }
+
+            return newProfile;
+        }
 
         if (authError) throw authError;
 
