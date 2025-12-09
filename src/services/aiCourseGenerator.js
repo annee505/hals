@@ -113,32 +113,58 @@ IMPORTANT: Respond ONLY with valid JSON matching this schema:
                     const lessonInfo = moduleData.lessons[j];
 
                     // Generate rich lesson content
-                    const contentPrompt = `Write the FULL detailed content for the lesson "${lessonInfo.title}" 
-which is part of the module "${moduleData.title}" in the course "${courseData.title}".
+                    const contentPrompt = `Write COMPREHENSIVE, WORLD-CLASS lesson content for "${lessonInfo.title}"
+from the module "${moduleData.title}" in the course "${courseData.title}".
 
-REQUIREMENTS:
-- Content length: 500-800 words
-- Format: RICH MARKDOWN
-- Use ## Headers, **Bold**, bullet points, numbered lists
-- Tone: Professional, engaging, educational
+CRITICAL REQUIREMENTS - MUST INCLUDE ALL OF THESE:
+1. LENGTH: 800-1200 words minimum
+2. FORMAT: Rich Markdown with proper hierarchy
 
-STRUCTURE:
+MANDATORY SECTIONS:
+
 ## Introduction
-Brief overview of what will be learned.
+2-3 paragraphs explaining what this lesson covers and why it matters.
 
 ## Core Concepts
-Main educational content with detailed explanations.
+Detailed explanations with:
+- **Bold** key terms
+- Bullet points for lists
+- Numbered steps for processes
 
-## Practical Example
-A real-world example or code snippet.
+## Code Example
+\`\`\`javascript
+// Include a real, working code example
+// relevant to this lesson's topic
+function example() {
+  // Show practical implementation
+}
+\`\`\`
+
+## Visual Learning
+Include a relevant image using markdown:
+![Diagram explaining ${lessonInfo.title}](https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800)
+
+## Video Resource
+**Must include a real YouTube video link:**
+📺 [Watch: ${lessonInfo.title} Tutorial](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+
+## Practical Exercise
+A hands-on task the learner should complete.
 
 ## Key Takeaways
-3-5 bullet points summarizing the lesson.
+- 5 bullet points summarizing the lesson
+- Make them actionable
 
-## Additional Resources
-- Link to a relevant article or video
+## External Resources
+- [Resource 1](https://developer.mozilla.org)
+- [Resource 2](https://www.freecodecamp.org)
+- [Resource 3](https://www.w3schools.com)
 
-IMPORTANT: Return ONLY raw Markdown content, no JSON wrapper.`;
+## Quiz Yourself
+> **Question:** Ask a review question about the content
+> **Answer:** Provide the answer
+
+IMPORTANT: Return ONLY raw Markdown content. Make it visually rich and engaging!`;
 
                     let lessonContent;
                     try {
