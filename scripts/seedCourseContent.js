@@ -47,14 +47,23 @@ async function generateAndSeedCourse(courseTitle, tags) {
     console.log(`Generating content for: ${courseTitle}...`);
 
     try {
-        const prompt = `Create a comprehensive learning course on "${courseTitle}".
+        const prompt = `Create a comprehensive, "World Class" learning course on "${courseTitle}".
+        
         Generate a course with:
         - Course title and description
         - Difficulty level (Beginner/Intermediate/Advanced)
         - Estimated duration (e.g., "6 weeks")
         - 4 modules with descriptive titles and descriptions
         - 3-4 lessons per module
-        - Each lesson should have: title, detailed content (300-500 words), estimated duration
+        
+        CRITICAL CONTENT REQUIREMENTS for each lesson:
+        - Content must be written in RICH MARKDOWN format.
+        - Use ## Headers, **Bold** text, and bullet points for readability.
+        - Include a "Real World Application" section.
+        - Include a "Key Takeaways" section.
+        - REQUIRED: Include exactly ONE relevant YouTube Video URL at the end of the content in this format: "Video Resource: [Watch on YouTube](video_url)".
+        - REQUIRED: Include 2-3 External Resource links (documentation, articles) at the end.
+        - Content length: 500-800 words per lesson. High depth and quality.
 
         IMPORTANT: Respond ONLY with valid JSON matching this schema:
         {

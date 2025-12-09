@@ -7,6 +7,8 @@ import { courseContentService } from '../services/courseContent';
 import { gamificationService } from '../services/gamification';
 import { ArrowLeft, CheckCircle, Circle, ChevronRight, ChevronLeft, BookOpen, Loader2 } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const LessonPage = () => {
     const { courseId, lessonId } = useParams();
@@ -177,8 +179,13 @@ const LessonPage = () => {
                             {currentLesson.title}
                         </h2>
 
-                        <div className="prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed font-sans whitespace-pre-wrap">
-                            {currentLesson.content}
+                        <div className="prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed font-sans">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                                a: ({ node, ...props }) => <a {...props} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer" />,
+                                img: ({ node, ...props }) => <img {...props} className="rounded-xl shadow-lg my-6 w-full" alt={props.alt || 'Lesson Image'} />
+                            }}>
+                                {currentLesson.content}
+                            </ReactMarkdown>
                         </div>
                     </div>
 
