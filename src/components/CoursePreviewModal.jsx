@@ -7,17 +7,25 @@ const CoursePreviewModal = ({ course, onClose, onEnroll }) => {
     const [curriculum, setCurriculum] = React.useState([]);
 
     React.useEffect(() => {
-        const content = courseContentService.getCourseContent(course.id);
-        if (content) {
-            // Transform modules into the format expected by the modal
-            const formatted = content.modules.map((mod, i) => ({
-                week: i + 1,
-                title: mod.title,
-                topics: mod.lessons.map(l => l.title),
-                duration: `${mod.lessons.reduce((acc, l) => acc + parseInt(l.duration), 0)} min`
-            }));
-            setCurriculum(formatted);
-        }
+        const loadContent = async () => {
+            try {
+                const content = await courseContentService.getCourseContent(course.id);
+                if (content && content.modules) {
+                    // Transform modules into the format expected by the modal
+                    const formatted = content.modules.map((mod, i) => ({
+                        week: i + 1,
+                        title: mod.title,
+                        topics: mod.lessons ? mod.lessons.map(l => l.title) : [],
+                        duration: `${mod.lessons ? mod.lessons.reduce((acc, l) => acc + parseInt(l.duration || 0), 0) : 0} min`
+                    }));
+                    setCurriculum(formatted);
+                }
+            } catch (error) {
+                console.error("Error loading course preview:", error);
+            }
+        };
+
+        loadContent();
     }, [course]);
 
     return (

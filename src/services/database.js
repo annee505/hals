@@ -8,6 +8,7 @@ export const database = {
             email,
             password,
             options: {
+                emailRedirectTo: window.location.origin,
                 data: {
                     name: profile.name,
                     hobbies: profile.hobbies,
