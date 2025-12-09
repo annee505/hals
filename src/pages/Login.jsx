@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authService } from '../services/auth';
-import GoogleAuthButton from '../components/GoogleAuthButton';
 import { Mail, Lock, Sparkles } from 'lucide-react';
 
 const Login = () => {
@@ -35,20 +34,7 @@ const Login = () => {
         }
     };
 
-    const handleGoogleLogin = async () => {
-        // Mock Google login
-        const mockGoogleProfile = {
-            email: `user${Date.now()}@gmail.com`,
-            name: 'Google User'
-        };
 
-        try {
-            await authService.googleLogin(mockGoogleProfile);
-            navigate('/profile-setup');
-        } catch (err) {
-            setError(err.message);
-        }
-    };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-purple-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
@@ -126,17 +112,6 @@ const Login = () => {
                             Log In
                         </motion.button>
                     </form>
-
-                    <div className="relative my-6">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">Or continue with</span>
-                        </div>
-                    </div>
-
-                    <GoogleAuthButton onClick={handleGoogleLogin} />
 
                     <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
                         Don't have an account?{' '}
