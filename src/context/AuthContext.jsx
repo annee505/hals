@@ -27,25 +27,17 @@ export const AuthProvider = ({ children }) => {
                         console.warn('Profile fetch failed:', dbError);
                     }
 
-                    // If no profile exists in database, user was deleted - sign them out
-                    if (!profile) {
-                        console.log('User no longer exists in database, signing out...');
-                        authService.logout(); // Clear localStorage
-                        await supabase.auth.signOut();
-                        setUser(null);
-                        setLoading(false);
-                        return;
-                    }
-
-                    // User exists, set the user state
+                    // Even if profile doesn't exist, still set a basic user object
+                    // The user might be new and needs to complete profile setup
+                    // Only sign out if we're sure they were deleted (on login, not signup)
                     setUser({
                         ...session.user,
-                        ...profile,
+                        ...(profile || {}),
                         id: session.user.id,
                         email: session.user.email,
-                        name: profile.name || session.user.email?.split('@')[0] || 'User',
-                        goal: profile.goal || '',
-                        hobbies: profile.hobbies || ''
+                        name: profile?.name || session.user.email?.split('@')[0] || 'User',
+                        goal: profile?.goal || '',
+                        hobbies: profile?.hobbies || ''
                     });
                 }
             } catch (error) {
@@ -58,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
         initSession();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             try {
                 if (session?.user) {
                     let profile = null;
@@ -68,25 +60,17 @@ export const AuthProvider = ({ children }) => {
                         console.warn('Profile fetch failed during auth change:', dbError);
                     }
 
-                    // If no profile exists in database, user was deleted - sign them out
-                    if (!profile) {
-                        console.log('User no longer exists in database, signing out...');
-                        authService.logout(); // Clear localStorage
-                        await supabase.auth.signOut();
-                        setUser(null);
-                        setLoading(false);
-                        return;
-                    }
-
-                    // User exists, set the user state
+                    // For new signups, profile might temporarily not exist
+                    // Just set the user and let them complete profile-setup
+                    // For existing users logging in, database.authenticateUser already handles the "deleted user" case
                     setUser({
                         ...session.user,
-                        ...profile,
+                        ...(profile || {}),
                         id: session.user.id,
                         email: session.user.email,
-                        name: profile.name || session.user.email?.split('@')[0] || 'User',
-                        goal: profile.goal || '',
-                        hobbies: profile.hobbies || ''
+                        name: profile?.name || session.user.email?.split('@')[0] || 'User',
+                        goal: profile?.goal || '',
+                        hobbies: profile?.hobbies || ''
                     });
                 } else {
                     setUser(null);

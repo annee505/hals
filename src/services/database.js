@@ -87,14 +87,22 @@ export const database = {
     },
 
     findUserByEmail: async (email) => {
-        const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .single();
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('email', email)
+                .maybeSingle(); // Use maybeSingle to avoid errors when no row found
 
-        if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "not found"
-        return data;
+            if (error) {
+                console.warn('Error fetching user by email:', error);
+                return null; // Return null instead of throwing
+            }
+            return data;
+        } catch (err) {
+            console.error('findUserByEmail exception:', err);
+            return null; // Return null on any error
+        }
     },
 
     getCurrentUser: async () => {

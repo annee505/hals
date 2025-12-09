@@ -52,17 +52,19 @@ const Dashboard = () => {
                 const enrollments = await database.getUserEnrollments(user.id);
 
                 if (enrollments && enrollments.length > 0) {
-                    const newCurriculum = enrollments.map(enrollment => ({
-                        id: enrollment.course.id,
-                        title: enrollment.course.title,
-                        modules: [
-                            {
-                                id: `mod-${enrollment.course.id}`,
-                                title: 'Continue Learning',
-                                status: enrollment.progress > 0 ? 'in-progress' : 'in-progress'
-                            }
-                        ]
-                    }));
+                    const newCurriculum = enrollments
+                        .filter(enrollment => enrollment && enrollment.course) // Filter out invalid enrollments
+                        .map(enrollment => ({
+                            id: enrollment.course.id,
+                            title: enrollment.course.title,
+                            modules: [
+                                {
+                                    id: `mod-${enrollment.course.id}`,
+                                    title: 'Continue Learning',
+                                    status: (enrollment.progress || 0) > 0 ? 'in-progress' : 'in-progress'
+                                }
+                            ]
+                        }));
                     setCurriculum(newCurriculum);
                 }
             } catch (error) {
