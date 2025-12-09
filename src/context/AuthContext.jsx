@@ -11,16 +11,13 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Safety timeout to prevent infinite loading
         const safetyTimer = setTimeout(() => setLoading(false), 5000);
 
-        // Check active session
         const initSession = async () => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (session?.user) {
-                    // Try to fetch full profile, but don't fail if missing
                     let profile = null;
                     try {
                         profile = await database.findUserByEmail(session.user.email);
@@ -28,11 +25,10 @@ export const AuthProvider = ({ children }) => {
                         console.warn('Profile fetch failed, using fallback:', dbError);
                     }
 
-                    // Fallback to session data if profile is missing
                     const safeProfile = profile || {};
                     setUser({
                         ...session.user,
-                        ...safeProfile, // Safe spread
+                        ...safeProfile,
                         id: session.user.id,
                         email: session.user.email,
                         name: safeProfile.name || session.user.email?.split('@')[0] || 'User',
@@ -43,13 +39,13 @@ export const AuthProvider = ({ children }) => {
             } catch (error) {
                 console.error('Error checking session:', error);
             } finally {
+                clearTimeout(safetyTimer);
                 setLoading(false);
             }
         };
 
         initSession();
 
-        // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             try {
                 if (session?.user) {
@@ -80,7 +76,12 @@ export const AuthProvider = ({ children }) => {
             }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            clearTimeout(safetyTimer);
+            if (subscription) {
+                subscription.unsubscribe();
+            }
+        };
     }, []);
 
     const value = {

@@ -15,14 +15,17 @@ export const authService = {
         }
     },
 
-    // Email/Password login
     login: async (email, password) => {
         try {
             const user = await database.authenticateUser(email, password);
+            if (!user) {
+                throw new Error('User not found');
+            }
             authService.createSession(user);
             return user;
         } catch (error) {
-            throw error;
+            const message = error?.message || 'Login failed. Please check your credentials.';
+            throw new Error(message);
         }
     },
 
@@ -48,14 +51,17 @@ export const authService = {
     },
 
     createSession: (user) => {
+        if (!user || !user.id || !user.email) {
+            throw new Error('Invalid user data for session');
+        }
         const session = {
             userId: user.id,
             email: user.email,
             profile: {
-                name: user.name,
-                hobbies: user.hobbies,
-                learningStyle: user.learning_style,
-                goal: user.goal
+                name: user.name || '',
+                hobbies: user.hobbies || '',
+                learningStyle: user.learning_style || '',
+                goal: user.goal || ''
             },
             isAuthenticated: true,
             createdAt: new Date().toISOString()

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authService } from '../services/auth';
@@ -40,9 +40,9 @@ const Login = () => {
 
         try {
             await authService.login(formData.email, formData.password);
-            // AuthContext will handle navigation via useEffect
         } catch (err) {
-            setError(err.message);
+            const errorMessage = err?.message || err?.error?.message || 'Failed to log in. Please check your credentials.';
+            setError(errorMessage);
             setLoading(false);
         }
     };

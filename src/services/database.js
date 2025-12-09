@@ -76,10 +76,20 @@ export const database = {
             password
         });
 
-        if (error) throw error;
+        if (error) {
+            throw new Error(error.message || 'Invalid email or password');
+        }
 
-        // Return the user profile from our table
-        return await database.findUserByEmail(email);
+        if (!data?.user) {
+            throw new Error('Authentication failed');
+        }
+
+        const user = await database.findUserByEmail(email);
+        if (!user) {
+            throw new Error('User profile not found');
+        }
+
+        return user;
     },
 
     updateUserProfile: async (userId, profileData) => {
