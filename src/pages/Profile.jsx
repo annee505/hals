@@ -27,9 +27,17 @@ const Profile = () => {
             goal: currentUser.goal
         });
 
-        // Get user enrollments
-        const userEnrollments = database.getUserEnrollments(currentUser.id);
-        setEnrollments(userEnrollments);
+        const loadData = async () => {
+            try {
+                // Get user enrollments
+                const userEnrollments = await database.getUserEnrollments(currentUser.id);
+                setEnrollments(userEnrollments);
+            } catch (error) {
+                console.error("Error loading enrollments:", error);
+            }
+        };
+
+        loadData();
     }, [navigate]);
 
     const handleUpdate = () => {

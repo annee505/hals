@@ -32,13 +32,18 @@ export const AuthProvider = ({ children }) => {
 
         // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            if (session?.user) {
-                const profile = await database.findUserByEmail(session.user.email);
-                setUser({ ...profile, id: session.user.id });
-            } else {
-                setUser(null);
+            try {
+                if (session?.user) {
+                    const profile = await database.findUserByEmail(session.user.email);
+                    setUser({ ...profile, id: session.user.id });
+                } else {
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error('Auth state change error:', error);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         });
 
         return () => subscription.unsubscribe();
