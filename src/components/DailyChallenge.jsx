@@ -138,7 +138,7 @@ const DailyChallenge = ({ onStartChallenge }) => {
                         <motion.button
                             whileHover={{ scale: isCompleted ? 1 : 1.05 }}
                             whileTap={{ scale: isCompleted ? 1 : 0.95 }}
-                            onClick={() => !isCompleted && onStartChallenge && onStartChallenge()}
+                            onClick={() => !isCompleted && onStartChallenge && onStartChallenge(challenge)}
                             disabled={isCompleted}
                             className={`px-6 py-2 rounded-lg font-semibold transition-all ${isCompleted
                                 ? 'bg-white/50 text-gray-700 cursor-not-allowed'

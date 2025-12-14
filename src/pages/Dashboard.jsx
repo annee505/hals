@@ -13,6 +13,7 @@ import ChatInterface from '../components/ChatInterface';
 import GamificationPanel from '../components/GamificationPanel';
 import DailyChallenge from '../components/DailyChallenge';
 import Assessment from '../components/Assessment';
+import ChallengeViewer from '../components/ChallengeViewer';
 import BadgeUnlockPopup from '../components/BadgeUnlockPopup';
 import ThemeToggle from '../components/ThemeToggle';
 import { MessageSquare, Plus, Sparkles, Loader2, X } from 'lucide-react';
@@ -24,6 +25,8 @@ const Dashboard = () => {
     const [stats, setStats] = useState(null);
     const [showChat, setShowChat] = useState(false);
     const [showAssessment, setShowAssessment] = useState(false);
+    const [showChallengeViewer, setShowChallengeViewer] = useState(false);
+    const [activeChallenge, setActiveChallenge] = useState(null);
     const [gamificationStats, setGamificationStats] = useState(null);
     const [badges, setBadges] = useState([]);
     const [newBadges, setNewBadges] = useState([]);
@@ -79,8 +82,22 @@ const Dashboard = () => {
         }
     }, [user, navigate]);
 
-    const handleChallengeStart = () => {
-        setShowAssessment(true);
+    const handleChallengeStart = (challenge) => {
+        setActiveChallenge(challenge);
+        setShowChallengeViewer(true);
+    };
+
+    const handleChallengeComplete = (feedback) => {
+        const gamStats = gamificationService.getStats();
+        setGamificationStats(gamStats);
+        setBadges(gamificationService.getBadges());
+
+        if (feedback?.newBadges && feedback.newBadges.length > 0) {
+            setNewBadges(feedback.newBadges);
+        }
+
+        setShowChallengeViewer(false);
+        setActiveChallenge(null);
     };
 
     const handleAssessmentComplete = (feedback) => {
@@ -308,6 +325,16 @@ const Dashboard = () => {
             </AnimatePresence>
 
             {showChat && <ChatInterface onClose={() => setShowChat(false)} />}
+            {showChallengeViewer && activeChallenge && (
+                <ChallengeViewer
+                    challenge={activeChallenge}
+                    onClose={() => {
+                        setShowChallengeViewer(false);
+                        setActiveChallenge(null);
+                    }}
+                    onComplete={handleChallengeComplete}
+                />
+            )}
             {showAssessment && (
                 <Assessment
                     topic={user.goal}
