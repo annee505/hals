@@ -68,6 +68,7 @@ function generateLocalCourse(userGoal) {
 
 // Generate rich lesson content locally
 function generateLocalLessonContent(lessonTitle, moduleName, courseName) {
+    const encodedTitle = encodeURIComponent(lessonTitle);
     return `## ${lessonTitle}
 
 Welcome to **${lessonTitle}**! Part of "${moduleName}" in "${courseName}".
@@ -96,8 +97,8 @@ function example() {
 example();
 \`\`\`
 
-### 📺 Video Resource
-📺 [Watch Tutorial](https://www.youtube.com/results?search_query=${encodeURIComponent(lessonTitle)})
+### 📺 Video Resources
+[Search "${lessonTitle}" on YouTube](https://www.youtube.com/results?search_query=${encodedTitle})
 
 ### ✅ Key Takeaways
 - ${lessonTitle} is essential for building a foundation
@@ -237,9 +238,39 @@ RESPOND ONLY WITH JSON:
                     const lesson = mod.lessons[j];
 
                     // Generate lesson content
-                    const contentPrompt = `Write 600+ words lesson content for "${lesson.title}" in course "${courseData.title}".
-Include: Introduction, Core Concepts, Code Example, Video link, Key Takeaways, External Resources.
-Use rich Markdown formatting.`;
+                    const contentPrompt = `Write a comprehensive 600+ word lesson for "${lesson.title}" in the course "${courseData.title}".
+
+STRUCTURE YOUR CONTENT LIKE THIS:
+## Introduction
+Brief overview of what will be covered.
+
+## Learning Objectives
+- Bullet points of what learners will achieve
+
+## Core Concepts
+Detailed explanation with examples.
+
+## Code Example (if applicable)
+\`\`\`javascript
+// Working code example
+\`\`\`
+
+## Key Takeaways
+- Summary bullets
+
+## 📺 Video Resources
+Use ONLY this format for videos (replace TOPIC with the lesson topic):
+[Search "${lesson.title}" on YouTube](https://www.youtube.com/results?search_query=${encodeURIComponent(lesson.title)})
+
+## 🔗 External Resources
+ONLY use these verified links - pick 2-3 relevant ones:
+- [MDN Web Docs](https://developer.mozilla.org)
+- [FreeCodeCamp](https://www.freecodecamp.org)
+- [W3Schools](https://www.w3schools.com)
+- [GeeksforGeeks](https://www.geeksforgeeks.org)
+
+CRITICAL: Do NOT invent or hallucinate any URLs. Only use the exact link formats above.
+Use rich Markdown formatting throughout.`;
 
                     let content = await tryGroq(contentPrompt);
                     if (!content) {
