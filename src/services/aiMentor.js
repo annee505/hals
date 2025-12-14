@@ -1,5 +1,6 @@
 import Groq from 'groq-sdk';
 import { searchKnowledge, formatKnowledgeContext } from '../data/knowledgeBase';
+import { aiKnowledgeService } from './aiKnowledge';
 
 const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
 
@@ -18,6 +19,9 @@ User profile:
 
 Relevant Knowledge Base:
 {knowledge_context}
+
+Your Uploaded Materials:
+{user_files_context}
 
 Conversation history:
 {history}
@@ -83,10 +87,16 @@ export const aiMentor = {
         const knowledgeResults = searchKnowledge(userMessage, 3);
         const knowledgeContext = formatKnowledgeContext(knowledgeResults) || 'No specific knowledge base content found for this query.';
 
+        // Search user's uploaded files for additional context
+        const userId = userProfile?.id;
+        const userFilesResults = userId ? aiKnowledgeService.searchUserFiles(userId, userMessage, 2) : [];
+        const userFilesContext = aiKnowledgeService.formatUserFilesContext(userFilesResults) || 'No uploaded materials available.';
+
         // Build the prompt with knowledge context
         const prompt = MENTOR_PROMPT
             .replace('{user_profile}', buildUserProfile(userProfile))
             .replace('{knowledge_context}', knowledgeContext)
+            .replace('{user_files_context}', userFilesContext)
             .replace('{history}', formatHistory(conversationHistory))
             .replace('{user_input}', userMessage);
 

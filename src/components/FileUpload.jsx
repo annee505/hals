@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Upload, X, FileText, CheckCircle, Clock } from 'lucide-react';
+import { aiKnowledgeService } from '../services/aiKnowledge';
 
 const FileUpload = ({ userId, courseId, onFileUploaded }) => {
     const [dragActive, setDragActive] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState('');
 
     const handleDrag = (e) => {
         e.preventDefault();
@@ -33,21 +35,35 @@ const FileUpload = ({ userId, courseId, onFileUploaded }) => {
         }
     };
 
-    const handleFiles = (files) => {
+    const handleFiles = async (files) => {
         setUploading(true);
 
-        // Simulate upload processing
-        setTimeout(() => {
-            Array.from(files).forEach(file => {
-                const fileData = {
-                    name: file.name,
-                    type: file.type,
-                    size: file.size
-                };
-                onFileUploaded(fileData);
-            });
-            setUploading(false);
-        }, 1000);
+        for (const file of Array.from(files)) {
+            try {
+                setUploadProgress(`Reading ${file.name}...`);
+
+                // Read the actual file content
+                const content = await aiKnowledgeService.readFileContent(file);
+
+                setUploadProgress(`Processing ${file.name} for AI training...`);
+
+                // Upload with content for RAG
+                const fileData = aiKnowledgeService.uploadFile(userId, file, courseId, content);
+
+                // Notify parent
+                onFileUploaded({
+                    ...fileData,
+                    contentPreview: content.slice(0, 200) + (content.length > 200 ? '...' : '')
+                });
+
+            } catch (error) {
+                console.error(`Error processing file ${file.name}:`, error);
+                setUploadProgress(`Error processing ${file.name}`);
+            }
+        }
+
+        setUploadProgress('');
+        setUploading(false);
     };
 
     return (
@@ -58,8 +74,8 @@ const FileUpload = ({ userId, courseId, onFileUploaded }) => {
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
                 className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${dragActive
-                        ? 'border-primary bg-primary/10'
-                        : 'border-gray-300 dark:border-gray-600 hover:border-primary'
+                    ? 'border-primary bg-primary/10'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-primary'
                     }`}
             >
                 <input
