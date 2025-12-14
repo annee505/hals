@@ -1,6 +1,48 @@
 import { supabase } from './supabase-config';
 
 export const courseContentService = {
+    // Get the first incomplete lesson for "continue where you left off"
+    getLastLesson: async (userId, courseId) => {
+        try {
+            // Get course content and progress
+            const [content, progress] = await Promise.all([
+                courseContentService.getCourseContent(courseId),
+                courseContentService.getProgress(userId, courseId)
+            ]);
+
+            if (!content.modules || content.modules.length === 0) return null;
+
+            const completedLessons = new Set(progress.completedLessons || []);
+
+            // Find first incomplete lesson
+            for (const module of content.modules) {
+                for (const lesson of module.lessons) {
+                    if (!completedLessons.has(lesson.id)) {
+                        return {
+                            courseId,
+                            lessonId: lesson.id,
+                            lessonTitle: lesson.title,
+                            moduleTitle: module.title
+                        };
+                    }
+                }
+            }
+
+            // All lessons complete, return the last lesson
+            const lastModule = content.modules[content.modules.length - 1];
+            const lastLesson = lastModule.lessons[lastModule.lessons.length - 1];
+            return {
+                courseId,
+                lessonId: lastLesson.id,
+                lessonTitle: lastLesson.title,
+                moduleTitle: lastModule.title,
+                isComplete: true
+            };
+        } catch (error) {
+            console.error('Error getting last lesson:', error);
+            return null;
+        }
+    },
     getCourseContent: async (courseId) => {
         // Fetch modules and lessons
         const { data: modules, error: modulesError } = await supabase

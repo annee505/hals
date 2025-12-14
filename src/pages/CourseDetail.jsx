@@ -84,6 +84,22 @@ const CourseDetail = () => {
                 const userProgress = await courseContentService.getProgress(user.id, courseId);
                 setProgress(userProgress);
 
+                // Auto-expand first module with incomplete lessons
+                if (courseContent.modules && courseContent.modules.length > 0) {
+                    const completedSet = new Set(userProgress.completedLessons || []);
+                    for (const mod of courseContent.modules) {
+                        const hasIncomplete = mod.lessons?.some(lesson => !completedSet.has(lesson.id));
+                        if (hasIncomplete) {
+                            setExpandedModules({ [mod.id]: true });
+                            break;
+                        }
+                    }
+                    // If all complete, expand the last module
+                    if (Object.keys(expandedModules).length === 0 && courseContent.modules.length > 0) {
+                        setExpandedModules({ [courseContent.modules[0].id]: true });
+                    }
+                }
+
                 const files = aiKnowledgeService.getUserFiles(user.id);
                 setUploadedFiles(files.filter(f => f.courseId === courseId || !f.courseId));
 

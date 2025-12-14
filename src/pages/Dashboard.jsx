@@ -7,6 +7,7 @@ import { curriculumService } from '../services/curriculum';
 import { gamificationService } from '../services/gamification';
 import { aiCourseGenerator } from '../services/aiCourseGenerator';
 import { database } from '../services/database';
+import { courseContentService } from '../services/courseContent';
 import CurriculumView from '../components/CurriculumView';
 import AnalyticsPanel from '../components/AnalyticsPanel';
 import ChatInterface from '../components/ChatInterface';
@@ -16,7 +17,7 @@ import Assessment from '../components/Assessment';
 import ChallengeViewer from '../components/ChallengeViewer';
 import BadgeUnlockPopup from '../components/BadgeUnlockPopup';
 import ThemeToggle from '../components/ThemeToggle';
-import { MessageSquare, Plus, Sparkles, Loader2, X } from 'lucide-react';
+import { MessageSquare, Plus, Sparkles, Loader2, X, Play } from 'lucide-react';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -37,6 +38,7 @@ const Dashboard = () => {
     const [showGenerator, setShowGenerator] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [generationGoal, setGenerationGoal] = useState('');
+    const [continueLesson, setContinueLesson] = useState(null);
 
     useEffect(() => {
         const loadData = async () => {
@@ -69,6 +71,18 @@ const Dashboard = () => {
                             ]
                         }));
                     setCurriculum(newCurriculum);
+
+                    // Find the last lesson for "Continue where you left off"
+                    if (enrollments.length > 0) {
+                        const firstCourse = enrollments[0].course;
+                        const lastLesson = await courseContentService.getLastLesson(user.id, firstCourse.id);
+                        if (lastLesson) {
+                            setContinueLesson({
+                                ...lastLesson,
+                                courseTitle: firstCourse.title
+                            });
+                        }
+                    }
                 }
             } catch (error) {
                 console.error("Error loading dashboard data:", error);
@@ -174,6 +188,35 @@ const Dashboard = () => {
                     {/* Main Content: Curriculum */}
                     <div className="lg:col-span-2 space-y-6">
                         <DailyChallenge onStartChallenge={handleChallengeStart} />
+
+                        {/* Continue where you left off */}
+                        {continueLesson && !continueLesson.isComplete && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 border-l-4 border-green-500"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center">
+                                        <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mr-3">
+                                            <Play className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">Continue where you left off</p>
+                                            <p className="font-semibold text-gray-900 dark:text-white">{continueLesson.lessonTitle}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{continueLesson.courseTitle} • {continueLesson.moduleTitle}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => navigate(`/course/${continueLesson.courseId}/lesson/${continueLesson.lessonId}`)}
+                                        className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors flex items-center"
+                                    >
+                                        <Play className="w-4 h-4 mr-2" />
+                                        Continue
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
 
                         <div className="bg-gradient-to-r from-primary to-indigo-600 rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
                             <div className="relative z-10">
