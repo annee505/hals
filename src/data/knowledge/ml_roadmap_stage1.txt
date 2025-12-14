@@ -1,0 +1,36 @@
+---
+document_type: roadmap
+topic: machine_learning
+skill_level: beginner_to_intermediate
+stage: 1
+duration_weeks: 4-8
+prerequisites: ml_roadmap_stage0.txt
+keywords: supervised learning, regression, classification, scikit-learn, model evaluation
+previous_stage: ml_roadmap_stage0.txt
+next_stage: ml_roadmap_stage2.txt
+---
+
+# Machine Learning Roadmap - Stage 1: Core ML Concepts
+
+## Goal
+Understand and implement fundamental supervised learning algorithms and evaluation techniques.
+
+## Key Topics
+1.  **Mathematical Foundations:** Linear Algebra (vectors, matrices) and Probability (distributions, mean, variance)—focus on **intuition and application**, not proofs.
+2.  **First ML Algorithms (scikit-learn):**
+    * **Linear Regression:** Predicting continuous values.
+    * **Logistic Regression:** Classification (binary choices, outputs probability).
+    * **Decision Trees:** Interpretable, flowchart-like models.
+3.  **Model Evaluation:**
+    * **Train/Test Split:** Essential to prevent testing on training data.
+    * **Cross-Validation:** For reliable performance estimates.
+    * **Metrics:** Accuracy, Precision, Recall, F1-score, Confusion Matrix.
+
+## Hands-On Projects
+* **Project 1: Simple Regression:** Predict a continuous value (e.g., house prices) using Linear Regression. Evaluate with $R^2$ score.
+* **Project 2: Classification Challenge:** Build a classifier (e.g., Titanic survival) using Logistic Regression and a Decision Tree. Compare models using Precision/Recall.
+
+## Success Criteria
+✓ You can explain overfitting and detect it.
+✓ You understand the difference between regression and classification.
+✓ You can train at least 2 algorithms using scikit-learn and interpret a confusion matrix.

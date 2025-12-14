@@ -1,0 +1,35 @@
+---
+document_type: roadmap
+topic: machine_learning
+skill_level: beginner
+stage: 0
+duration_weeks: 2-4
+prerequisites: python_basics_detailed.txt
+keywords: ML foundation, Python basics, NumPy, pandas, beginner ML
+next_stage: ml_roadmap_stage1.txt
+---
+
+# Machine Learning Roadmap - Stage 0: Foundation
+
+## Goal
+Build the Python and data manipulation foundation needed for machine learning.
+
+## Key Topics
+1.  **Python Essentials:** Variables, control flow, functions, basic data structures.
+2.  **Data Tools:** **NumPy** (arrays, indexing), **pandas** (DataFrames, reading CSVs, filtering), **Matplotlib** (simple visualizations).
+
+## Hands-On Project
+**Mini-project: Data Cleaning and Visualization**
+* Download a small CSV dataset (e.g., Iris, Titanic subset).
+* Load it with pandas.
+* Clean missing values (impute or drop).
+* Compute basic statistics (mean, median).
+* Create 3-5 simple visualizations (scatter, bar).
+
+## Success Criteria
+✓ You can write a Python script that reads a CSV and filters rows.
+✓ You understand what NumPy arrays and pandas DataFrames are.
+✓ You can create basic plots.
+
+## Common Mistakes at This Stage
+See mistake_to_avoid.md, Section 1: "Skipping Fundamentals" (Jumping straight to complex models).

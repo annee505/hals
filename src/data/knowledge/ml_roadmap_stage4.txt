@@ -1,0 +1,45 @@
+---
+document_type: roadmap
+topic: machine_learning
+skill_level: advanced
+stage: 4
+duration_weeks: 6-8
+prerequisites: ml_roadmap_stage3.txt
+keywords: MLOps, deployment, Docker, FastAPI, experiment tracking, model monitoring
+previous_stage: ml_roadmap_stage3.txt
+next_steps: career_paths.md
+---
+
+# Machine Learning Roadmap - Stage 4: Deployment & MLOps
+
+## Goal
+Learn how to take a trained model and deploy it into a production environment.
+
+## Key Topics
+1.  **Model Serving:**
+    * **APIs:** Use **FastAPI** (Python) to create a high-performance web endpoint for your model.
+    * **Serialization:** Saving and loading models efficiently (e.g., `pickle`, `joblib`, ONNX).
+2.  **Containerization (Deployment):**
+    * **Docker:** Basics of creating a `Dockerfile` to package your application (code, environment, and model) for portability.
+    * **Container orchestration** (high-level: Kubernetes/ECS).
+3.  **MLOps Basics (Production Management):**
+    * **Experiment Tracking:** Use **MLflow** or **Weights & Biases (WandB)** to log parameters, metrics, and model artifacts.
+    * **Model Versioning:** Managing different iterations of a model.
+    * **CI/CD:** Basic Continuous Integration/Continuous Deployment setup (e.g., using GitHub Actions) to automate retraining.
+4.  **Monitoring:**
+    * **Model Drift:** Understanding and detecting when a deployed model's performance degrades due to changes in real-world data distribution.
+
+## Hands-On Projects
+* **Capstone Project: End-to-End Deployment**
+    * Take your best model from Stage 2 or 3.
+    * Wrap it in a **FastAPI** server.
+    * Create a **Dockerfile** to containerize the application.
+    * Deploy the container to a simple cloud platform (Render, Heroku, or a free tier of AWS/GCP).
+
+## Success Criteria
+✓ You can explain why Docker is necessary for reproducible ML deployment.
+✓ You have successfully built a REST API endpoint that serves predictions.
+✓ You know how to log and compare different model runs using an experiment tracking tool.
+
+## What Comes Next
+With a full portfolio and deployment experience, you are ready to specialize in a career path. See career_paths.md.

@@ -1,0 +1,42 @@
+---
+document_type: roadmap
+topic: machine_learning
+skill_level: intermediate_to_advanced
+stage: 3
+duration_weeks: 8-12
+prerequisites: ml_roadmap_stage2.txt
+keywords: deep learning, neural networks, PyTorch, TensorFlow, CNN, RNN, transformers
+previous_stage: ml_roadmap_stage2.txt
+next_stage: ml_roadmap_stage4.txt
+---
+
+# Machine Learning Roadmap - Stage 3: Deep Learning Basics
+
+## Goal
+Understand neural networks and build deep learning models using modern frameworks.
+
+## Key Topics
+1.  **Neural Network Fundamentals:**
+    * **Core Concepts:** Perceptron, Activation functions (ReLU, Sigmoid), Layers.
+    * **Learning:** Forward propagation, **Backpropagation** intuition (how it learns).
+    * **Tools:** Loss functions (MSE, Cross-Entropy), Optimizers (Adam).
+2.  **Framework Deep Dive:** Learn either **PyTorch** (recommended for learning/research) or **TensorFlow/Keras** (recommended for deployment/production).
+3.  **Computer Vision (CNNs):**
+    * **Concepts:** Convolutional Layers, Pooling Layers.
+    * **Techniques:** **Transfer Learning** (using pre-trained models like ResNet on new tasks).
+4.  **Sequences and NLP Basics:**
+    * **RNNs/LSTMs:** For sequential data (text, time series).
+    * **Transformers:** High-level introduction to the **Attention** mechanism and using models like BERT via Hugging Face.
+
+## Hands-On Projects
+* **Project 1: Multi-layer Neural Network:** Build an NN for tabular data, compare to previous models.
+* **Project 2: Image Classifier:** Build a simple CNN, then use **Transfer Learning** with a pre-trained model (e.g., ResNet18) on a small image dataset.
+* **Project 3: Text Classifier (NLP):** Build a basic LSTM model or fine-tune a pre-trained transformer for sentiment analysis.
+
+## Hardware Note
+For serious projects, a GPU is necessary. Use **Google Colab** or **Kaggle Kernels** for free GPU access.
+
+## Success Criteria
+✓ You can build and train a neural network in PyTorch/TensorFlow.
+✓ You've used Transfer Learning for an image task.
+✓ You understand what CNNs are good for (images) and LSTMs/Transformers are good for (sequences).

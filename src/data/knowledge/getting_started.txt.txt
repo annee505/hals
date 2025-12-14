@@ -1,0 +1,52 @@
+---
+document_type: guide
+topic: onboarding
+skill_level: all
+keywords: beginner, getting started, first steps, assessment
+next_steps: skill_questions.txt
+---
+
+# Getting Started with Your Learning Journey
+
+## Welcome!
+This is your AI learning mentor. I'm here to help you navigate your learning path in tech, whether you're starting from zero or looking to advance your skills.
+
+## First Steps
+
+**If you're completely new:**
+Start with the skill assessment questions in skill_questions.txt. This helps me understand your background and recommend the right path.
+
+**If you know what you want to learn:**
+- Machine Learning → See ml_roadmap_stage0.txt
+- Web Development → See webdev_roadmap_stage0.txt 
+- Python Programming → See python_basics_detailed.txt
+
+**If you're not sure what to learn:**
+Answer these quick questions:
+1. How many hours per week can you dedicate? (Less than 5 / 5-10 / 10+ hours)
+2. What excites you more: building visual apps, analyzing data, or creating intelligent systems?
+3. Do you have any programming experience?
+
+Based on your answers, I'll guide you to the right starting point.
+
+## What to Expect
+
+**Time commitment:** Most paths require 4-6 months of consistent study (5-10 hours/week) to reach job-ready skills.
+
+**Learning approach:** You'll alternate between learning concepts and building small projects. Every 2-3 weeks, you'll complete a mini-project to solidify your learning.
+
+**Progress tracking:** We'll check in regularly to assess progress and adjust your path as needed.
+
+## Common Questions
+
+**Q: I'm overwhelmed, where do I start?**
+A: Start with Python basics regardless of your goal. It's the foundation for most tech paths. See python_basics_detailed.txt.
+
+**Q: Can I learn faster?**
+A: Yes, with more hours per week. But quality matters more than speed—understanding fundamentals deeply saves time later.
+
+**Q: What if I get stuck?**
+A: That's normal! Review the study_tips_detailed.txt document for strategies. Focus on small wins and ask specific questions.
+
+## Next Steps
+Ready to begin? Tell me about your background and goals, and I'll create a personalized plan.

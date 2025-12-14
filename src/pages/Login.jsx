@@ -35,18 +35,37 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('[Login] Button clicked, starting login...');
         setError('');
         setLoading(true);
 
         try {
-            await authService.login(formData.email, formData.password);
+            console.log('[Login] Calling authService.login...');
+            const user = await authService.login(formData.email, formData.password);
+            console.log('[Login] Login successful, user:', user);
+            // Successfully logged in - navigate based on profile completeness
+            if (!user.goal || !user.hobbies) {
+                navigate('/profile-setup');
+            } else {
+                navigate('/dashboard');
+            }
         } catch (err) {
+            console.error('[Login] Error:', err);
             const errorMessage = err?.message || err?.error?.message || 'Failed to log in. Please check your credentials.';
             setError(errorMessage);
             setLoading(false);
         }
     };
 
+    const handleClearSession = () => {
+        console.log('[Login] Clearing all session data...');
+        // Clear all localStorage
+        localStorage.clear();
+        // Clear sessionStorage too
+        sessionStorage.clear();
+        // Reload the page
+        window.location.reload();
+    };
 
 
     return (
@@ -140,6 +159,17 @@ const Login = () => {
                             Sign up
                         </Link>
                     </p>
+
+                    {error && error.includes('timed out') && (
+                        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
+                            <button
+                                onClick={handleClearSession}
+                                className="text-primary hover:underline font-medium"
+                            >
+                                Clear session and try again
+                            </button>
+                        </p>
+                    )}
                 </div>
             </motion.div>
         </div>

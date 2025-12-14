@@ -122,7 +122,7 @@ const Dashboard = () => {
         }
     };
 
-    // If user is not yet set or auth is loading, show simple loader
+    // Require authenticated user
     if (authLoading || !user) return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />

@@ -1,0 +1,53 @@
+---
+document_type: tutorial
+topic: python_programming
+skill_level: beginner
+keywords: Python, programming basics, loops, functions, exercises
+related_documents: ml_roadmap_stage0.txt, webdev_roadmap_stage0.txt
+next_steps: ml_roadmap_stage0.txt or webdev_roadmap_stage0.txt
+---
+
+# Python Basics - Detailed Guide with Exercises
+
+## Why Python for Learning?
+Python is the #1 language for beginners because: Readable syntax, huge community, and used everywhere (data science, web dev, ML).
+
+## Core Concepts with Exercises
+
+### 1. Variables and Data Types
+**Concepts:** `int`, `float`, `str`, `bool`.
+**Exercise:** Calculate BMI = weight / (height * height) from user inputs.
+
+### 2. Control Flow (if/else)
+**Concepts:** Make decisions based on conditions.
+**Exercise:** Create a simple Grade calculator (A, B, C, F) based on a score input (0-100).
+
+### 3. Loops (for and while)
+**Concepts:** Repeat actions. Use `range()` for counts, `while` for conditions.
+**Exercise:** Print the multiplication table for any number N (N×1 through N×10).
+
+### 4. Functions
+**Concepts:** Reusable code blocks (`def`, `return`).
+**Exercise:** Write a function `celsius_to_fahrenheit(celsius)`.
+
+### 5. Data Structures (Lists, Dictionaries)
+**Concepts:** Ordered collections (`lists`), key-value pairs (`dictionaries`).
+**Exercise:** Word frequency counter: input a sentence, output a dictionary of word counts.
+
+### 6. File I/O (Input/Output)
+**Concepts:** Read from and write to text files and CSVs using `with open(...)`.
+**Exercise:** Read a file line by line and print only lines that contain a specific keyword.
+
+### 7. Libraries: NumPy and pandas
+**Concepts:** NumPy for numerical arrays, pandas for DataFrames (table-like structure).
+**Exercise:** Mini-project: Load a CSV with pandas, compute mean/median of a numeric column, and filter rows based on a condition.
+
+## Best Practices
+1. **Use meaningful variable names** (`student_age` not `sa`).
+2. **Keep functions small** (one function = one task).
+3. **Test as you go** (run code after every few lines).
+
+## Quick Self-Assessment
+- [ ] I can write a function that takes parameters and returns a value.
+- [ ] I can use `for` loops to iterate over lists.
+- [ ] I can load a CSV file with pandas and filter the data.

@@ -1,0 +1,41 @@
+---
+document_type: roadmap
+topic: web_development
+skill_level: intermediate
+stage: 1
+duration_weeks: 8-12
+prerequisites: webdev_roadmap_stage0.txt
+keywords: React, Node.js, Express, databases, full-stack, REST API, deployment
+previous_stage: webdev_roadmap_stage0.txt
+next_steps: ml_roadmap_stage4.txt (if integrating ML)
+---
+
+# Web Development Roadmap - Stage 1: Full-Stack & Deployment
+
+## Goal
+Integrate a modern front-end framework with a stable back-end to build a complete, deployable web application.
+
+## Key Topics (Front-end)
+1.  **Modern Framework:** Learn **React** (components, JSX, props, state, hooks) or **Vue/Angular**.
+2.  **Data Fetching:** Using the native `fetch` API or a library like Axios to talk to back-end services.
+
+## Key Topics (Back-end)
+1.  **Server Technology:** Learn **Node.js + Express** (JavaScript/TypeScript) or **Python + FastAPI/Django**.
+2.  **REST APIs:** Understanding CRUD (Create, Read, Update, Delete) operations and status codes (200, 404, 500).
+3.  **Databases:** Basic SQL (`SELECT`, `INSERT`, `UPDATE`, `DELETE`) with PostgreSQL or a NoSQL database like MongoDB.
+
+## Deployment & Tooling
+1.  **Version Control:** **Git** and **GitHub** (commit, branch, merge, pull request).
+2.  **Deployment:** Deploying the front-end (Vercel/Netlify) and back-end (Render/Railway/AWS).
+
+## Hands-On Projects
+* **Project 1: Full-Stack CRUD Application:** Build a **To-Do List** or simple **Note-Taking App** where you can create, read, update, and delete entries.
+    * Use React for the front-end.
+    * Use Express/FastAPI for the back-end API.
+    * Store data in a PostgreSQL or MongoDB database.
+* **Project 2: Portfolio Polish:** Host your projects on a professional GitHub repository with clear READMEs.
+
+## Success Criteria
+✓ You can build a functioning API endpoint (e.g., `/api/notes`).
+✓ You can use a framework like React to consume that API and display data dynamically.
+✓ You've successfully managed your code with Git branching/merging and deployed a full-stack application to the public internet.

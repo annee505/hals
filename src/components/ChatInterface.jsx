@@ -1,17 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, Sparkles } from 'lucide-react';
+import { Send, Bot, Sparkles, AlertCircle } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { aiMentor } from '../services/aiMentor';
+import { useAuth } from '../context/AuthContext';
 
 const ChatInterface = ({ onClose }) => {
+    const { user } = useAuth();
     const [messages, setMessages] = useState([
-        { id: 1, sender: 'ai', text: "Hello! I'm your AI Coach. I see you're interested in learning. How can I help you get started today?" }
+        { id: 1, sender: 'ai', text: `Hello${user?.name ? ` ${user.name}` : ''}! I'm your AI Learning Mentor. ${user?.goal ? `I see you're interested in ${user.goal}. ` : ''}How can I help you today?` }
     ]);
     const [input, setInput] = useState('');
     const [isThinking, setIsThinking] = useState(false);
+    const [error, setError] = useState(null);
     const [suggestedReplies, setSuggestedReplies] = useState([
-        "How do I start?",
-        "Quiz me on this topic",
-        "Explain in simple terms"
+        "How do I start learning?",
+        "Create a learning roadmap for me",
+        "Quiz me on a topic"
     ]);
     const messagesEndRef = useRef(null);
 
@@ -30,23 +35,35 @@ const ChatInterface = ({ onClose }) => {
         setInput('');
         setIsThinking(true);
         setSuggestedReplies([]);
+        setError(null);
 
-        // Mock AI response delay
-        setTimeout(() => {
+        try {
+            // Call AI mentor with conversation history and user profile
+            const response = await aiMentor.chat(
+                messageText,
+                [...messages, userMsg],
+                user
+            );
+
             const aiMsg = {
                 id: Date.now() + 1,
                 sender: 'ai',
-                text: "That's a great question. Let's break it down using the P-P-A-R cycle. First, let's perceive the core concept..."
+                text: response
             };
             setMessages(prev => [...prev, aiMsg]);
+
+            // Generate context-aware suggested replies
+            const suggestions = aiMentor.getSuggestedReplies(response);
+            setSuggestedReplies(suggestions);
+        } catch (err) {
+            console.error('AI Mentor error:', err);
+            setError('Sorry, I encountered an issue. Please try again.');
+            setSuggestedReplies(["Try again", "Ask something else"]);
+        } finally {
             setIsThinking(false);
-            setSuggestedReplies([
-                "Tell me more",
-                "Give me an example",
-                "Let's practice"
-            ]);
-        }, 1500);
+        }
     };
+
 
     const messageVariants = {
         hidden: { opacity: 0, y: 20, scale: 0.8 },
@@ -116,14 +133,35 @@ const ChatInterface = ({ onClose }) => {
                                 className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
                                 <div className={`max-w-[80%] rounded-2xl p-4 ${msg.sender === 'user'
-                                        ? 'bg-gradient-to-r from-primary to-indigo-600 text-white rounded-tr-none shadow-lg'
-                                        : 'bg-white text-gray-800 shadow-md rounded-tl-none border border-gray-100'
+                                    ? 'bg-gradient-to-r from-primary to-indigo-600 text-white rounded-tr-none shadow-lg'
+                                    : 'bg-white text-gray-800 shadow-md rounded-tl-none border border-gray-100'
                                     }`}>
-                                    <p className="text-sm leading-relaxed">{msg.text}</p>
+                                    {msg.sender === 'ai' ? (
+                                        <div className="text-sm leading-relaxed prose prose-sm max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-li:my-0">
+                                            <ReactMarkdown>{msg.text}</ReactMarkdown>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm leading-relaxed">{msg.text}</p>
+                                    )}
                                 </div>
                             </motion.div>
                         ))}
+
+                        {/* Error message */}
+                        {error && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex justify-start"
+                            >
+                                <div className="bg-red-50 text-red-700 rounded-2xl p-4 shadow-md rounded-tl-none border border-red-200 flex items-center gap-2">
+                                    <AlertCircle className="w-4 h-4" />
+                                    <p className="text-sm">{error}</p>
+                                </div>
+                            </motion.div>
+                        )}
                     </AnimatePresence>
+
 
                     {isThinking && (
                         <motion.div

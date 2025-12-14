@@ -1,0 +1,38 @@
+---
+document_type: roadmap
+topic: web_development
+skill_level: beginner
+stage: 0
+duration_weeks: 4-6
+prerequisites: none
+keywords: HTML, CSS, JavaScript, frontend basics, responsive design
+next_stage: webdev_roadmap_stage1.txt
+---
+
+# Web Development Roadmap - Stage 0: Foundations (Front-end)
+
+## Goal
+Master the three pillars of the web to build static and interactive interfaces.
+
+## Key Topics
+1.  **HTML (Structure):** Semantic tags (`<header>`, `<nav>`, `<footer>`), forms, accessibility basics.
+2.  **CSS (Style):**
+    * **Layout:** **Flexbox** and **CSS Grid** (essential for responsive design).
+    * **Styling:** Selectors, Box Model, basic animations.
+    * **Frameworks (Intro):** Tailwind or Bootstrap (high-level overview).
+3.  **JavaScript (Interactivity):**
+    * **Basics:** Variables, functions, loops, control flow (same as Python basics).
+    * **DOM Manipulation:** Changing page content dynamically.
+    * **Events:** Handling user actions (clicks, key presses).
+
+## Hands-On Projects
+* **Project 1: Static Portfolio Site:** Build a multi-page personal website using only HTML and CSS. Ensure it looks good on mobile (responsive design).
+* **Project 2: JavaScript Utility:** Build a simple interactive tool like a tip calculator, modal window, or image carousel using JavaScript to manipulate the DOM.
+
+## Success Criteria
+✓ You can build a complex, responsive layout using Flexbox and/or Grid.
+✓ You can write JavaScript to change the text or color of an HTML element after a button click.
+✓ You've deployed a static site (e.g., GitHub Pages or Vercel).
+
+## Common Mistakes at This Stage
+Not understanding the difference between `==` and `===` in JavaScript, and relying on absolute positioning instead of Flexbox/Grid.

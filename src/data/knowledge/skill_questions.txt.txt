@@ -1,0 +1,30 @@
+---
+document_type: assessment
+skill_level: all
+keywords: skill evaluation, assessment questions, initial check
+---
+
+# Skill Assessment Questions
+
+## Programming & Foundations
+1.  **Languages:** What programming languages do you know? (e.g., Python, JavaScript, None)
+2.  **Basic Scripting:** Can you write a basic Python program that uses loops and functions? (Yes/No)
+3.  **Data Structures:** Do you know how to use lists and dictionaries/objects to store structured data? (Yes/No)
+
+## Math & Statistics
+4.  **Math Level:** Have you taken any courses in Calculus or Linear Algebra? (Basic/Intermediate/Advanced/None)
+5.  **Statistics:** Are you comfortable calculating and interpreting mean, median, and variance? (Yes/No)
+
+## Goals & Motivation
+6.  **Time Commitment:** How many hours per week can you consistently dedicate to learning? (5/10/15+)
+7.  **Primary Interest:** What excites you most? (Building interactive apps, analyzing data, or creating predictive/intelligent systems)
+8.  **Project Preference:** Do you prefer guided tutorials or open-ended projects?
+
+## ML/Web-Specific Check (Follow-up)
+9.  **ML Check:** Do you know what the "Train/Test Split" is? (Yes/No)
+10. **Web Check:** Do you know the difference between HTML, CSS, and JavaScript? (Yes/No)
+
+## Follow-up Logic
+* If user is **Beginner** (Q2, Q3, Q5 are No): Recommend starting with **python_basics_detailed.txt**.
+* If user is focused on **ML** (Q7: Intelligent Systems): Recommend starting with **ml_roadmap_stage0.txt**.
+* If user is focused on **Web Dev** (Q7: Interactive Apps): Recommend starting with **webdev_roadmap_stage0.txt**.

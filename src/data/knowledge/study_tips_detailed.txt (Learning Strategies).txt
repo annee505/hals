@@ -1,0 +1,32 @@
+---
+document_type: guide
+topic: learning_strategies
+skill_level: all
+keywords: study habits, productivity, learning techniques, time management, active recall
+---
+
+# Study Tips for Effective Tech Learning
+
+## Core Principle: Active Learning
+**Avoid Passive Consumption.** Don't just watch tutorials; pause and code along. Try to predict the next step before the instructor shows it.
+
+## 1. Time Management & Consistency
+* **Consistency over Intensity:** 1 hour a day > 10 hours once a week.
+* **Pomodoro Technique:** 25 minutes of focused work, 5-minute break. This maintains high concentration.
+
+## 2. Active Recall & Spaced Repetition
+* **Active Recall:** Test yourself without looking at notes. Ask: "What is the difference between Precision and Recall?" before looking up the answer.
+* **Spaced Repetition:** Review old concepts 1 day, 3 days, 1 week, 2 weeks later. This moves knowledge from short-term to long-term memory.
+
+## 3. The Power of Teaching
+* **The Feynman Technique:** Try to explain a concept (like Backpropagation or Cross-Validation) out loud to a non-technical person. If you can't, you don't fully understand it yet.
+
+## 4. Portfolio & Tracking
+* **Keep a Project README:** Every project needs a clear README explaining the problem, solution, and results. This is your portfolio.
+* **Track Progress:** Use a simple log to track hours and completed exercises.
+
+## Common Mistakes (Integrated)
+Review mistake_to_avoid.md for the full list, especially:
+* **Skipping Fundamentals:** Weak Python/Math foundations cripple later progress.
+* **Overfitting to Tutorials:** Change the data or task slightly after a tutorial to prove you can apply the concept independently.
+* **Ignoring Data Quality:** 80% of ML is data cleaning—don't rush this step.

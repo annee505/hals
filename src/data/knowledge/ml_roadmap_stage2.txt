@@ -1,0 +1,39 @@
+---
+document_type: roadmap
+topic: machine_learning
+skill_level: intermediate
+stage: 2
+duration_weeks: 6-10
+prerequisites: ml_roadmap_stage1.txt
+keywords: feature engineering, ensemble methods, random forest, xgboost, clustering, PCA
+previous_stage: ml_roadmap_stage1.txt
+next_stage: ml_roadmap_stage3.txt
+---
+
+# Machine Learning Roadmap - Stage 2: Intermediate Topics
+
+## Goal
+Master feature engineering, advanced ML techniques, and unsupervised learning.
+
+## Key Topics
+1.  **Feature Engineering & Preprocessing:**
+    * **Scaling:** `StandardScaler`, `MinMaxScaler`.
+    * **Encoding:** One-hot encoding, label encoding.
+    * **Handling Missing Data:** Imputation strategies.
+    * **Feature Creation/Selection:** Creating domain-specific features, correlation analysis.
+2.  **Ensemble Methods:**
+    * **Bagging:** **Random Forest** (reduces overfitting of single trees).
+    * **Boosting:** **XGBoost, LightGBM** (sequential tree building, often high accuracy).
+3.  **Unsupervised Learning:**
+    * **Clustering:** **K-Means** (segmentation), **DBSCAN**.
+    * **Dimensionality Reduction:** **PCA** (reducing features while retaining variance, good for visualization).
+
+## Hands-On Projects
+* **Project 1: Feature Engineering Competition:** Improve a baseline model's performance by creating 10+ new features.
+* **Project 2: Ensemble Pipeline:** Build a complete `scikit-learn` pipeline with preprocessing, train and tune **XGBoost** and **Random Forest**, and compare results.
+* **Project 3: Clustering Analysis:** Apply K-Means clustering to a dataset (e.g., customer data), interpret the clusters, and visualize the results using PCA.
+
+## Success Criteria
+✓ You can build a complete preprocessing pipeline.
+✓ You understand when to use Random Forest vs XGBoost.
+✓ You have successfully applied K-Means clustering and interpreted the results.

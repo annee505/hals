@@ -1,0 +1,36 @@
+---
+document_type: guide
+topic: career
+skill_level: all
+keywords: job roles, data scientist, machine learning engineer, web developer, data engineer
+related_documents: ml_roadmap_stage4.txt, webdev_roadmap_stage1.txt
+---
+
+# Career Paths in Tech: Overview & Skillsets
+
+## 1. Data Scientist
+* **Focus:** **Analysis and Insight**. Interprets complex data, designs experiments, and communicates findings to stakeholders.
+* **Core Skills:** Statistics, Experimental Design, Advanced ML Modeling, Python/R, SQL, Visualization (Tableau/Matplotlib).
+* **Key Question:** *Why* did the model make that prediction? *What* business decision should we make based on the data?
+
+## 2. Machine Learning Engineer (MLE)
+* **Focus:** **Production and Scalability**. Builds and maintains the infrastructure required to run ML models reliably and efficiently in production.
+* **Core Skills:** Software Engineering (OOP, clean code), MLOps (Docker, CI/CD), Cloud Platforms (AWS/GCP/Azure), TensorFlow/PyTorch, REST APIs (FastAPI).
+* **Key Question:** *How* do we deploy this model safely? *How* do we monitor its performance for drift?
+
+## 3. Data Engineer
+* **Focus:** **Data Infrastructure**. Designs, builds, and manages the pipelines that transport and transform raw data into a clean, usable format for Data Scientists/MLEs.
+* **Core Skills:** ETL/ELT tools (Airflow, Kafka), Databases (SQL, Data Warehousing like Snowflake), Distributed Systems (Spark), Cloud Architecture.
+* **Key Question:** *Where* does the raw data come from? *How* do we ensure data quality and availability at scale?
+
+## 4. Full-stack Developer
+* **Focus:** **End-to-End Application**. Builds both the user-facing interface (front-end) and the server logic/database (back-end).
+* **Core Skills:** JavaScript/TypeScript, Front-end Frameworks (React/Vue), Back-end Languages (Node.js/Python), REST APIs, Databases, Git.
+* **Key Question:** *How* do we deliver a seamless, fast, and feature-rich experience to the user?
+
+## How to Choose Your Path
+Try a project in each area:
+* **Data Scientist:** Use a Kaggle dataset to generate an insightful report with visualizations.
+* **MLE:** Wrap a model in a FastAPI container and deploy it (Stage 4).
+* **Data Engineer:** Build a scheduled script that cleans, transforms, and loads data into a database.
+* **Full-stack:** Build a complete CRUD app (Stage 1 WebDev).

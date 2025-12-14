@@ -69,8 +69,14 @@ export const authService = {
         localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     },
 
-    logout: () => {
+    logout: async () => {
+        // Clear Supabase auth session
+        const { supabase } = await import('./supabase-config');
+        await supabase.auth.signOut();
+
+        // Clear local session data
         localStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem('hals-auth-token'); // Also clear the Supabase storage key
     },
 
     getUser: () => {
