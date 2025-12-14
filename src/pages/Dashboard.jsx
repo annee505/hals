@@ -38,6 +38,7 @@ const Dashboard = () => {
     const [showGenerator, setShowGenerator] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [generationGoal, setGenerationGoal] = useState('');
+    const [generationStep, setGenerationStep] = useState('');
     const [continueLesson, setContinueLesson] = useState(null);
 
     useEffect(() => {
@@ -132,16 +133,44 @@ const Dashboard = () => {
         if (!generationGoal.trim()) return;
 
         setIsGenerating(true);
+        setGenerationStep('🎯 Analyzing your learning goal...');
+
         try {
+            // Simulate progress steps with timing
+            const progressSteps = [
+                { step: '📚 Creating course outline...', delay: 2000 },
+                { step: '📖 Generating Module 1...', delay: 3000 },
+                { step: '📖 Generating Module 2...', delay: 3000 },
+                { step: '📖 Generating Module 3...', delay: 3000 },
+                { step: '✨ Adding lesson content...', delay: 4000 },
+                { step: '🎉 Finalizing your course...', delay: 2000 }
+            ];
+
+            // Start progress animation in background
+            let stepIndex = 0;
+            const progressInterval = setInterval(() => {
+                if (stepIndex < progressSteps.length) {
+                    setGenerationStep(progressSteps[stepIndex].step);
+                    stepIndex++;
+                }
+            }, 2500);
+
             const course = await aiCourseGenerator.generateCourse(generationGoal, {
                 learningStyle: user.learningStyle,
                 hobbies: user.hobbies
             });
 
+            clearInterval(progressInterval);
+            setGenerationStep('✅ Course created successfully!');
+
             // Auto-enroll
             await database.enrollInCourse(user.id, course.id);
 
+            // Brief pause to show success
+            await new Promise(r => setTimeout(r, 1000));
+
             setIsGenerating(false);
+            setGenerationStep('');
             setShowGenerator(false);
 
             // Navigate to the new course
@@ -149,6 +178,7 @@ const Dashboard = () => {
         } catch (error) {
             console.error("Error generating course:", error);
             setIsGenerating(false);
+            setGenerationStep('');
             alert("Failed to generate course. Please try again.");
         }
     };
@@ -352,7 +382,7 @@ const Dashboard = () => {
                                     {isGenerating ? (
                                         <>
                                             <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                            Generating Course...
+                                            {generationStep || 'Generating Course...'}
                                         </>
                                     ) : (
                                         <>
@@ -361,6 +391,29 @@ const Dashboard = () => {
                                         </>
                                     )}
                                 </button>
+
+                                {/* Progress Steps */}
+                                {isGenerating && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-4 text-center"
+                                    >
+                                        <div className="flex justify-center space-x-1 mb-3">
+                                            {[1, 2, 3, 4, 5].map((i) => (
+                                                <motion.div
+                                                    key={i}
+                                                    className="w-2 h-2 bg-primary rounded-full"
+                                                    animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+                                                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                                                />
+                                            ))}
+                                        </div>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            This usually takes 30-60 seconds. Please wait...
+                                        </p>
+                                    </motion.div>
+                                )}
                             </form>
                         </motion.div>
                     </div>
