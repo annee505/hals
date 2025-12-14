@@ -204,11 +204,11 @@ const Profile = () => {
                                 <BookOpen className="w-12 h-12 text-white opacity-80" />
                             </div>
                             <div className="p-4">
-                                <h4 className="font-bold text-gray-900 dark:text-white mb-2">{enrollment.course?.title}</h4>
+                                <h4 className="font-bold text-gray-900 dark:text-white mb-2">{enrollment.course?.title || 'Untitled Course'}</h4>
                                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
-                                    <div className="bg-primary h-2 rounded-full" style={{ width: `${enrollment.progress}%` }} />
+                                    <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${enrollment.progress || 0}%` }} />
                                 </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">{enrollment.progress}% Complete</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">{enrollment.progress || 0}% Complete</p>
                             </div>
                         </motion.div>
                     ))}

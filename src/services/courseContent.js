@@ -136,40 +136,65 @@ export const courseContentService = {
     },
 
     updateEnrollmentProgress: async (userId, courseId) => {
-        // Calculate percentage
-        const { data: modules } = await supabase
-            .from('modules')
-            .select('id, lessons(id)')
-            .eq('course_id', courseId);
+        try {
+            // Calculate percentage
+            const { data: modules, error: modulesError } = await supabase
+                .from('modules')
+                .select('id, lessons(id)')
+                .eq('course_id', courseId);
 
-        let totalLessons = 0;
-        let lessonIds = [];
-
-        modules?.forEach(m => {
-            if (m.lessons) {
-                totalLessons += m.lessons.length;
-                lessonIds = [...lessonIds, ...m.lessons.map(l => l.id)];
+            if (modulesError) {
+                console.error('Error fetching modules:', modulesError);
+                return 0;
             }
-        });
 
-        if (totalLessons === 0) return;
+            let totalLessons = 0;
+            let lessonIds = [];
 
-        const { count } = await supabase
-            .from('lesson_progress')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', userId)
-            .eq('completed', true)
-            .in('lesson_id', lessonIds);
+            modules?.forEach(m => {
+                if (m.lessons) {
+                    totalLessons += m.lessons.length;
+                    lessonIds = [...lessonIds, ...m.lessons.map(l => l.id)];
+                }
+            });
 
-        const percentage = Math.round((count / totalLessons) * 100);
+            if (totalLessons === 0) {
+                console.log('No lessons found for course:', courseId);
+                return 0;
+            }
 
-        // Update enrollment
-        await supabase
-            .from('enrollments')
-            .update({ progress: percentage })
-            .eq('user_id', userId)
-            .eq('course_id', courseId);
+            const { count, error: countError } = await supabase
+                .from('lesson_progress')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .eq('completed', true)
+                .in('lesson_id', lessonIds);
 
-        return percentage;
+            if (countError) {
+                console.error('Error counting completed lessons:', countError);
+                return 0;
+            }
+
+            const percentage = Math.round(((count || 0) / totalLessons) * 100);
+            console.log(`Progress update: ${count || 0}/${totalLessons} = ${percentage}%`);
+
+            // Update enrollment
+            const { error: updateError } = await supabase
+                .from('enrollments')
+                .update({ progress: percentage })
+                .eq('user_id', userId)
+                .eq('course_id', courseId);
+
+            if (updateError) {
+                console.error('Error updating enrollment progress:', updateError);
+            } else {
+                console.log('Successfully updated progress to', percentage, '%');
+            }
+
+            return percentage;
+        } catch (error) {
+            console.error('Error in updateEnrollmentProgress:', error);
+            return 0;
+        }
     }
 };
