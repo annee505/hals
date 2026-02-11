@@ -8,8 +8,10 @@ import { gamificationService } from '../services/gamification';
 import { aiCourseGenerator } from '../services/aiCourseGenerator';
 import { database } from '../services/database';
 import { courseContentService } from '../services/courseContent';
+import { streakService } from '../services/streakService';
 import CurriculumView from '../components/CurriculumView';
 import AnalyticsPanel from '../components/AnalyticsPanel';
+import StreakDisplay from '../components/StreakDisplay';
 import ChatInterface from '../components/ChatInterface';
 import GamificationPanel from '../components/GamificationPanel';
 import DailyChallenge from '../components/DailyChallenge';
@@ -33,6 +35,7 @@ const Dashboard = () => {
     const [newBadges, setNewBadges] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [streakData, setStreakData] = useState(null);
 
     // AI Generation State
     const [showGenerator, setShowGenerator] = useState(false);
@@ -53,6 +56,9 @@ const Dashboard = () => {
                     setGamificationStats(gamificationService.updateStreak());
                     setBadges(gamificationService.getBadges());
                 }
+
+                // Load streak data (background, non-blocking)
+                streakService.getStreakData(user.id).then(sd => setStreakData(sd)).catch(() => { });
 
                 // Load real enrollments (Async)
                 const enrollments = await database.getUserEnrollments(user.id);
@@ -323,8 +329,14 @@ const Dashboard = () => {
                         )}
                     </div>
 
-                    {/* Sidebar: Analytics & Gamification */}
+                    {/* Sidebar: Streak, Analytics & Gamification */}
                     <div className="lg:col-span-1 space-y-6">
+                        {/* Study Streak */}
+                        <StreakDisplay
+                            streakData={streakData}
+                            onGoalChange={() => streakService.getStreakData(user.id).then(sd => setStreakData(sd))}
+                        />
+
                         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Quick Links</h3>
                             <button

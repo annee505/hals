@@ -9,6 +9,7 @@ import { courseContentService } from '../services/courseContent';
 import { flashcardService } from '../services/flashcards';
 import { aiKnowledgeService } from '../services/aiKnowledge';
 import { gamificationService } from '../services/gamification';
+import { streakService } from '../services/streakService';
 import { quizGenerator } from '../services/quizGenerator';
 import Flashcards from '../components/Flashcards';
 import FileUpload from '../components/FileUpload';
@@ -154,6 +155,9 @@ const CourseDetail = () => {
             if (result.newBadges && result.newBadges.length > 0) {
                 setNewBadges(result.newBadges);
             }
+
+            // Invalidate streak cache so dashboard refreshes
+            streakService.invalidateCache();
         } catch (error) {
             console.error("Error completing lesson:", error);
         }
