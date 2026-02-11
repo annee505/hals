@@ -49,14 +49,19 @@ export const database = {
 
 
     updateUserProfile: async (userId, profileData) => {
+        const updateData = {
+            name: profileData.name,
+            hobbies: profileData.hobbies,
+            learning_style: profileData.learningStyle,
+            goal: profileData.goal
+        };
+        // Only include new fields if they exist
+        if (profileData.pace) updateData.pace = profileData.pace;
+        if (profileData.contentDepth) updateData.content_depth = profileData.contentDepth;
+
         const { data, error } = await supabase
             .from('users')
-            .update({
-                name: profileData.name,
-                hobbies: profileData.hobbies,
-                learning_style: profileData.learningStyle,
-                goal: profileData.goal
-            })
+            .update(updateData)
             .eq('id', userId)
             .select()
             .single();

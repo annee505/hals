@@ -22,7 +22,10 @@ export const AuthProvider = ({ children }) => {
                 email: sessionUser.email,
                 name: profile?.name || sessionUser.email?.split('@')[0] || 'User',
                 goal: profile?.goal || '',
-                hobbies: profile?.hobbies || ''
+                hobbies: profile?.hobbies || '',
+                learningStyle: profile?.learning_style || 'visual',
+                pace: profile?.pace || 'balanced',
+                contentDepth: profile?.content_depth || 'standard'
             };
         } catch (error) {
             console.warn('Profile fetch failed:', error);

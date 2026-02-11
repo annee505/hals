@@ -108,9 +108,9 @@ example();
 - Connect with the community
 
 ### 🔗 External Resources
-- [MDN Web Docs](https://developer.mozilla.org)
-- [FreeCodeCamp](https://www.freecodecamp.org)
-- [W3Schools](https://www.w3schools.com)
+- [Wikipedia: ${lessonTitle}](https://en.wikipedia.org/wiki/${encodedTitle})
+- [YouTube: ${lessonTitle}](https://www.youtube.com/results?search_query=${encodedTitle})
+- [Google Scholar: ${lessonTitle}](https://scholar.google.com/scholar?q=${encodedTitle})
 
 ### ❓ Self-Assessment
 > **Question:** What are the three key principles?
@@ -157,11 +157,75 @@ async function tryGroq(prompt, jsonMode = false) {
     return null;
 }
 
+// Learning style instruction mappings
+function getStyleInstructions(style) {
+    const instructions = {
+        visual: `LEARNING STYLE: Visual
+- Include diagrams described in text (ASCII art or markdown tables to illustrate concepts)
+- Reference video tutorials and visual resources frequently
+- Use analogies and visual metaphors to explain concepts
+- Add "📺 Watch" sections with YouTube search links for key topics
+- Structure content with clear visual hierarchy using headers, bullets, and bold text
+- Include flowcharts or step-by-step visual breakdowns where applicable`,
+
+        auditory: `LEARNING STYLE: Auditory
+- Include "🎧 Listen" sections with podcast or audio resource recommendations
+- Add discussion prompts and questions the learner can talk through
+- Write in a conversational, narrative tone as if explaining to someone verbally
+- Include "Explain it to a friend" exercises
+- Suggest recording yourself explaining concepts as a study technique
+- Add debate-style "Consider both sides" sections for complex topics`,
+
+        reading: `LEARNING STYLE: Reading/Writing
+- Provide detailed, in-depth written explanations (longer than usual)
+- Include "📝 Notes" sections with key definitions and summaries
+- Add written exercises like "Write a summary of..." or "Document how..."
+- Use structured outlines and numbered lists extensively
+- Include a glossary of key terms at the end
+- Suggest journaling or note-taking exercises`,
+
+        kinesthetic: `LEARNING STYLE: Kinesthetic (Hands-on)
+- Include "🛠️ Try It" hands-on exercises after every major concept
+- Add mini-projects and coding challenges throughout
+- Use "build along" step-by-step instructions
+- Include "Experiment" sections encouraging learners to modify and break things
+- Focus on learning by doing rather than reading
+- Add real-world application scenarios the learner can physically work through`
+    };
+    return instructions[style] || instructions.visual;
+}
+
+function getPaceAndDepthInstructions(pace, depth) {
+    let instructions = '';
+
+    // Pace instructions
+    const paceMap = {
+        intensive: 'PACE: Intensive — Pack lessons densely with content. Assume daily study sessions of 45-60 minutes. Move quickly between concepts.',
+        balanced: 'PACE: Balanced — Structure for 3-4 study sessions per week, 30-40 minutes each. Include brief recaps at the start of each lesson.',
+        relaxed: 'PACE: Relaxed — Keep lessons shorter and more digestible. Assume 1-2 sessions per week. Include more review and reinforcement.'
+    };
+    instructions += (paceMap[pace] || paceMap.balanced) + '\n';
+
+    // Depth instructions
+    const depthMap = {
+        overview: 'DEPTH: Quick Overview — Focus on key takeaways and practical application. Skip deep theory. Keep explanations concise.',
+        standard: 'DEPTH: Standard — Balance theory and practice. Explain the "why" behind concepts but keep it accessible.',
+        deep: 'DEPTH: Deep Dive — Include thorough theoretical foundations, edge cases, history, and advanced nuances. Assume the learner wants mastery.'
+    };
+    instructions += depthMap[depth] || depthMap.standard;
+
+    return instructions;
+}
+
 export const aiCourseGenerator = {
     generateCourse: async (userGoal, preferences = {}) => {
+        const { learningStyle, pace, contentDepth } = preferences;
+        const styleHint = learningStyle ? `\nThe learner prefers a ${learningStyle} learning style. Tailor module and lesson titles to emphasize ${learningStyle === 'visual' ? 'visual examples, demos, and diagrams' : learningStyle === 'auditory' ? 'discussions, explanations, and audio' : learningStyle === 'reading' ? 'reading, writing, and documentation' : 'hands-on projects and practical exercises'}.` : '';
+        const paceHint = pace === 'intensive' ? '\nDesign for intensive daily study — make lessons dense and challenging.' : pace === 'relaxed' ? '\nDesign for a relaxed pace — keep lessons shorter and include more review.' : '';
+
         try {
             const outlinePrompt = `Create a comprehensive learning course on "${userGoal}".
-Generate a course with 4 modules, 4 lessons each.
+Generate a course with 4 modules, 4 lessons each.${styleHint}${paceHint}
 RESPOND ONLY WITH JSON:
 {
   "title": "Course Title",
@@ -237,8 +301,15 @@ RESPOND ONLY WITH JSON:
                 for (let j = 0; j < mod.lessons.length; j++) {
                     const lesson = mod.lessons[j];
 
-                    // Generate lesson content
+                    // Generate lesson content with learning style awareness
+                    const styleBlock = getStyleInstructions(learningStyle);
+                    const paceBlock = getPaceAndDepthInstructions(pace, contentDepth);
+
                     const contentPrompt = `Write a comprehensive 600+ word lesson for "${lesson.title}" in the course "${courseData.title}".
+
+${styleBlock}
+
+${paceBlock}
 
 STRUCTURE YOUR CONTENT LIKE THIS:
 ## Introduction
@@ -263,14 +334,23 @@ Use ONLY this format for videos (replace TOPIC with the lesson topic):
 [Search "${lesson.title}" on YouTube](https://www.youtube.com/results?search_query=${encodeURIComponent(lesson.title)})
 
 ## 🔗 External Resources
-GENERATE 2-3 RELEVANT SEARCH LINKS using these formats (replace TOPIC with the specific lesson keyword):
+Generate 2-3 resource links that are ACTUALLY RELEVANT to the course topic "${courseData.title}".
+Use these universal resources PLUS topic-specific ones:
 
-- [MDN: TOPIC](https://developer.mozilla.org/en-US/search?q=TOPIC)
-- [GeeksforGeeks: TOPIC](https://www.geeksforgeeks.org/search?q=TOPIC)
-- [StackOverflow: TOPIC](https://stackoverflow.com/search?q=TOPIC)
-- [Dev.to: TOPIC](https://dev.to/search?q=TOPIC)
+ALWAYS include:
+- [Wikipedia: TOPIC](https://en.wikipedia.org/wiki/TOPIC)
+- [Google Scholar: TOPIC](https://scholar.google.com/scholar?q=TOPIC)
 
-CRITICAL: URL Encode the TOPIC in the links (e.g. "JS%20Functions").
+Then add 1-2 links to websites that are ACTUALLY authoritative for this specific subject area.
+For programming topics use: MDN, StackOverflow, GitHub, Dev.to
+For music topics use: AllMusic, Pitchfork, MusicTheory.net
+For science topics use: Khan Academy, NASA, Nature.com
+For business topics use: Harvard Business Review, Investopedia
+For history topics use: History.com, Britannica, JSTOR
+For other topics: pick the most relevant authoritative sources.
+
+CRITICAL: URL Encode the TOPIC in the links (e.g. "Rock%20and%20Roll").
+DO NOT use programming-focused sites unless the course is actually about programming.
 Use rich Markdown formatting throughout.`;
 
                     let content = await tryGroq(contentPrompt);

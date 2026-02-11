@@ -5,7 +5,7 @@ import { authService } from '../services/auth';
 import { useAuth } from '../context/AuthContext';
 import { database } from '../services/database';
 import ThemeToggle from '../components/ThemeToggle';
-import { Edit, BookOpen, Award, Target } from 'lucide-react';
+import { Edit, BookOpen, Award, Target, Zap, Layers } from 'lucide-react';
 
 // ...
 
@@ -23,7 +23,9 @@ const Profile = () => {
             name: user.name,
             hobbies: user.hobbies,
             learningStyle: user.learningStyle,
-            goal: user.goal
+            goal: user.goal,
+            pace: user.pace || 'balanced',
+            contentDepth: user.contentDepth || 'standard'
         });
 
         const loadData = async () => {
@@ -160,6 +162,30 @@ const Profile = () => {
                                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                                 />
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Study Pace</label>
+                                <select
+                                    value={formData.pace}
+                                    onChange={(e) => setFormData({ ...formData, pace: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                                >
+                                    <option value="intensive">Intensive (daily)</option>
+                                    <option value="balanced">Balanced (3-4x/week)</option>
+                                    <option value="relaxed">Relaxed (1-2x/week)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Content Depth</label>
+                                <select
+                                    value={formData.contentDepth}
+                                    onChange={(e) => setFormData({ ...formData, contentDepth: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                                >
+                                    <option value="overview">Quick Overview</option>
+                                    <option value="standard">Standard</option>
+                                    <option value="deep">Deep Dive</option>
+                                </select>
+                            </div>
                             <button
                                 onClick={handleUpdate}
                                 className="w-full bg-gradient-to-r from-primary to-indigo-600 text-white py-2 rounded-lg font-semibold hover:shadow-lg transition-all"
@@ -188,6 +214,20 @@ const Profile = () => {
                                 <div>
                                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Learning Style</p>
                                     <p className="text-gray-900 dark:text-white capitalize">{user.learningStyle || 'Not set'}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start">
+                                <Zap className="w-5 h-5 text-primary mr-3 mt-1" />
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Study Pace</p>
+                                    <p className="text-gray-900 dark:text-white capitalize">{user.pace || 'Balanced'}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start">
+                                <Layers className="w-5 h-5 text-primary mr-3 mt-1" />
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Content Depth</p>
+                                    <p className="text-gray-900 dark:text-white capitalize">{user.contentDepth || 'Standard'}</p>
                                 </div>
                             </div>
                         </div>

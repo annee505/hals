@@ -157,7 +157,9 @@ const Dashboard = () => {
 
             const course = await aiCourseGenerator.generateCourse(generationGoal, {
                 learningStyle: user.learningStyle,
-                hobbies: user.hobbies
+                hobbies: user.hobbies,
+                pace: user.pace || 'balanced',
+                contentDepth: user.contentDepth || 'standard'
             });
 
             clearInterval(progressInterval);
