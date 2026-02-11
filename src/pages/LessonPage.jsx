@@ -40,10 +40,18 @@ const LessonPage = () => {
                 setContent(courseContent);
                 setProgress(userProgress);
 
+                if (!courseContent || !courseContent.modules) {
+                    console.error("Course content or modules not found");
+                    // Could navigate back or show error state here
+                    setLoading(false);
+                    return;
+                }
+
                 // Find the specific lesson
                 let foundLesson = null;
                 let foundModule = null;
 
+<<<<<<< HEAD
                 if (courseContent && courseContent.modules) {
                     for (const mod of courseContent.modules) {
                         const lesson = mod.lessons?.find(l => l.id.toString() === lessonId || l.id === lessonId);
@@ -52,6 +60,16 @@ const LessonPage = () => {
                             foundModule = mod;
                             break;
                         }
+=======
+                for (const mod of courseContent.modules) {
+                    if (!mod.lessons) continue; // Skip if no lessons in module
+
+                    const lesson = mod.lessons.find(l => l.id.toString() === lessonId || l.id === lessonId);
+                    if (lesson) {
+                        foundLesson = lesson;
+                        foundModule = mod;
+                        break;
+>>>>>>> 2447d69 (fix(LessonPage): prevent crash on missing course data)
                     }
                 }
 
@@ -84,6 +102,7 @@ const LessonPage = () => {
         );
     }
 
+<<<<<<< HEAD
     if (error) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -98,6 +117,9 @@ const LessonPage = () => {
     if (!currentLesson) return null;
 
     const isCompleted = progress?.completedLessons.includes(currentLesson.id);
+=======
+    const isCompleted = progress?.completedLessons?.includes(currentLesson.id) || false;
+>>>>>>> 2447d69 (fix(LessonPage): prevent crash on missing course data)
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors">
