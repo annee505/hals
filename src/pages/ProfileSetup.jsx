@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { database } from '../services/database';
-import { authService } from '../services/auth';
 import { Loader2 } from 'lucide-react';
 
 const ProfileSetup = () => {
     const navigate = useNavigate();
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, refreshProfile } = useAuth();
     const [formData, setFormData] = useState({
         hobbies: '',
         learningStyle: 'visual',
@@ -42,13 +41,8 @@ const ProfileSetup = () => {
             // Update profile in database
             await database.updateUserProfile(user.id, formData);
 
-            // Update local session
-            authService.createSession({
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                ...formData
-            });
+            // Refresh context so the app has the updated profile
+            await refreshProfile();
 
             // Navigate to dashboard
             navigate('/dashboard');
