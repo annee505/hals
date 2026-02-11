@@ -9,6 +9,8 @@ import { ArrowLeft, CheckCircle, Circle, ChevronRight, ChevronLeft, BookOpen, Lo
 import ThemeToggle from '../components/ThemeToggle';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.min.css';
 
 const LessonPage = () => {
     const { courseId, lessonId } = useParams();
@@ -200,11 +202,40 @@ const LessonPage = () => {
                             {currentLesson.title}
                         </h2>
 
-                        <div className="prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed font-sans">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
-                                a: ({ node, ...props }) => <a {...props} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer" />,
-                                img: ({ node, ...props }) => <img {...props} className="rounded-xl shadow-lg my-6 w-full" alt={props.alt || 'Lesson Image'} />
-                            }}>
+                        <div className="prose prose-lg dark:prose-invert max-w-none leading-relaxed font-sans
+                            prose-headings:font-bold prose-headings:text-gray-900 dark:prose-headings:text-white
+                            prose-p:text-gray-700 dark:prose-p:text-gray-300
+                            prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                            prose-strong:text-gray-900 dark:prose-strong:text-white
+                            prose-code:text-primary prose-code:bg-indigo-50 dark:prose-code:bg-indigo-900/30 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:font-medium prose-code:before:content-none prose-code:after:content-none
+                            prose-pre:bg-gray-900 prose-pre:rounded-xl prose-pre:shadow-lg prose-pre:border prose-pre:border-gray-700
+                            prose-blockquote:border-primary prose-blockquote:bg-indigo-50/50 dark:prose-blockquote:bg-indigo-900/10 prose-blockquote:rounded-r-lg prose-blockquote:not-italic
+                            prose-table:overflow-hidden prose-table:rounded-lg
+                            prose-th:bg-gray-100 dark:prose-th:bg-gray-700 prose-th:px-4 prose-th:py-2
+                            prose-td:px-4 prose-td:py-2 prose-td:border-t prose-td:border-gray-200 dark:prose-td:border-gray-600
+                            prose-li:marker:text-primary
+                            prose-hr:border-gray-200 dark:prose-hr:border-gray-700
+                            prose-img:rounded-xl prose-img:shadow-lg">
+                            <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeHighlight]}
+                                components={{
+                                    a: ({ node, ...props }) => (
+                                        <a {...props} className="text-primary hover:underline transition-colors" target="_blank" rel="noopener noreferrer" />
+                                    ),
+                                    img: ({ node, ...props }) => (
+                                        <img {...props} className="rounded-xl shadow-lg my-6 w-full" alt={props.alt || 'Lesson Image'} />
+                                    ),
+                                    table: ({ node, ...props }) => (
+                                        <div className="overflow-x-auto my-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                                            <table {...props} className="min-w-full" />
+                                        </div>
+                                    ),
+                                    pre: ({ node, ...props }) => (
+                                        <pre {...props} className="!bg-gray-900 rounded-xl shadow-lg border border-gray-700 overflow-x-auto" />
+                                    ),
+                                }}
+                            >
                                 {currentLesson.content}
                             </ReactMarkdown>
                         </div>

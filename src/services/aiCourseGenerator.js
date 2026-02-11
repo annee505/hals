@@ -83,9 +83,9 @@ This lesson covers essential concepts and practical applications of ${lessonTitl
 
 ### 📖 Core Concepts
 **Key Points:**
-1. **Foundation** - Understanding basics gives you a solid start
-2. **Practice** - Regular practice reinforces learning
-3. **Application** - Real-world application cements knowledge
+1. **Foundation** — Understanding basics gives you a solid start
+2. **Practice** — Regular practice reinforces learning
+3. **Application** — Real-world application cements knowledge
 
 ### 💻 Code Example
 \`\`\`javascript
@@ -97,24 +97,19 @@ function example() {
 example();
 \`\`\`
 
-### 📺 Video Resources
-[Search "${lessonTitle}" on YouTube](https://www.youtube.com/results?search_query=${encodedTitle})
-
 ### ✅ Key Takeaways
 - ${lessonTitle} is essential for building a foundation
 - Practice regularly to reinforce understanding
 - Apply what you learn to real projects
 - Revisit this lesson as needed
-- Connect with the community
 
-### 🔗 External Resources
-- [Wikipedia: ${lessonTitle}](https://en.wikipedia.org/wiki/${encodedTitle})
-- [YouTube: ${lessonTitle}](https://www.youtube.com/results?search_query=${encodedTitle})
-- [Google Scholar: ${lessonTitle}](https://scholar.google.com/scholar?q=${encodedTitle})
+### 📺 Recommended Videos
+- [${lessonTitle} — Full Tutorial](https://www.youtube.com/results?search_query=${encodedTitle}+full+tutorial)
+- [${lessonTitle} — Explained Simply](https://www.youtube.com/results?search_query=${encodedTitle}+explained+for+beginners)
 
-### ❓ Self-Assessment
-> **Question:** What are the three key principles?
-> **Answer:** Foundation, Practice, and Application!`;
+### 🔗 Curated Resources
+- [${lessonTitle} — Wikipedia](https://en.wikipedia.org/wiki/${encodedTitle})
+- [${lessonTitle} — Google Scholar](https://scholar.google.com/scholar?q=${encodedTitle})`;
 }
 
 // Try to generate with Gemini
@@ -312,6 +307,7 @@ ${styleBlock}
 ${paceBlock}
 
 STRUCTURE YOUR CONTENT LIKE THIS:
+
 ## Introduction
 Brief overview of what will be covered.
 
@@ -319,7 +315,7 @@ Brief overview of what will be covered.
 - Bullet points of what learners will achieve
 
 ## Core Concepts
-Detailed explanation with examples.
+Detailed explanation with examples. Use tables, diagrams (ASCII/text), and clear formatting.
 
 ## Code Example (if applicable)
 \`\`\`javascript
@@ -329,29 +325,40 @@ Detailed explanation with examples.
 ## Key Takeaways
 - Summary bullets
 
-## 📺 Video Resources
-Use ONLY this format for videos (replace TOPIC with the lesson topic):
-[Search "${lesson.title}" on YouTube](https://www.youtube.com/results?search_query=${encodeURIComponent(lesson.title)})
+## 📺 Recommended Videos
+Recommend 2-3 SPECIFIC, well-known YouTube videos that are genuinely useful for learning "${lesson.title}".
+For each video, provide:
+- The EXACT video title as it appears on YouTube
+- The channel name
+- A brief note on why it's helpful (1 sentence)
 
-## 🔗 External Resources
-Generate 2-3 resource links that are ACTUALLY RELEVANT to the course topic "${courseData.title}".
-Use these universal resources PLUS topic-specific ones:
+Format each video as a link using this pattern:
+[Video Title — Channel Name](https://www.youtube.com/results?search_query=EXACT+VIDEO+TITLE+CHANNEL+NAME)
 
-ALWAYS include:
-- [Wikipedia: TOPIC](https://en.wikipedia.org/wiki/TOPIC)
-- [Google Scholar: TOPIC](https://scholar.google.com/scholar?q=TOPIC)
+EXAMPLE (do not use this, pick REAL videos for the topic):
+[JavaScript Crash Course for Beginners — Traversy Media](https://www.youtube.com/results?search_query=JavaScript+Crash+Course+for+Beginners+Traversy+Media)
 
-Then add 1-2 links to websites that are ACTUALLY authoritative for this specific subject area.
-For programming topics use: MDN, StackOverflow, GitHub, Dev.to
-For music topics use: AllMusic, Pitchfork, MusicTheory.net
-For science topics use: Khan Academy, NASA, Nature.com
-For business topics use: Harvard Business Review, Investopedia
-For history topics use: History.com, Britannica, JSTOR
-For other topics: pick the most relevant authoritative sources.
+Pick videos from well-known educational channels relevant to this subject area. These should be REAL videos you are confident exist.
 
-CRITICAL: URL Encode the TOPIC in the links (e.g. "Rock%20and%20Roll").
-DO NOT use programming-focused sites unless the course is actually about programming.
-Use rich Markdown formatting throughout.`;
+## 🔗 Curated Resources
+Recommend 3-4 SPECIFIC pages (not homepages) from authoritative websites.
+Each link should go to a SPECIFIC article, tutorial, or page — NOT a homepage or search query.
+
+Format: [Page Title — Site Name](https://full-url-to-specific-page)
+
+For programming: link to specific MDN docs, specific StackOverflow answers, specific GitHub repos, specific tutorials.
+For music: link to specific AllMusic pages, MusicTheory.net lessons, specific articles.
+For science: link to specific Khan Academy lessons, specific NASA pages, specific Wikipedia articles.
+For business: link to specific Investopedia articles, HBR pieces.
+For history: link to specific Britannica entries, History.com articles.
+
+CRITICAL RULES:
+- Every URL must point to a SPECIFIC page, not a homepage or generic search
+- URL-encode special characters in URLs
+- Only recommend resources you are confident exist
+- DO NOT use programming-focused sites unless the course is about programming
+
+Use rich Markdown formatting throughout — headers, bold, tables, bullet lists, blockquotes.`;
 
                     let content = await tryGroq(contentPrompt);
                     if (!content) {
