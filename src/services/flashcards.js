@@ -1,48 +1,174 @@
+import { supabase } from './supabase-config';
+import Groq from 'groq-sdk';
+
 const FLASHCARD_KEY = 'hals_flashcards';
+const FLASHCARD_DECK_KEY = 'hals_flashcard_decks';
+const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
 
-export const flashcardDecks = {
-    'course-1': {
-        title: 'Python Programming Flashcards',
-        cards: [
-            { id: 'card-1', front: 'What is a variable in Python?', back: 'A variable is a named storage location that holds a value which can be changed during program execution.' },
-            { id: 'card-2', front: 'What are the main data types in Python?', back: 'int (integer), float (decimal), str (string), bool (boolean), list, tuple, dict (dictionary), set' },
-            { id: 'card-3', front: 'What is a function?', back: 'A reusable block of code that performs a specific task, defined using the def keyword.' },
-            { id: 'card-4', front: 'Explain the difference between a list and a tuple.', back: 'Lists are mutable (can be changed) and use square brackets []. Tuples are immutable (cannot be changed) and use parentheses ().' },
-            { id: 'card-5', front: 'What is OOP?', back: 'Object-Oriented Programming is a programming paradigm based on objects and classes, featuring encapsulation, inheritance, and polymorphism.' },
-            { id: 'card-6', front: 'How do you handle exceptions in Python?', back: 'Using try-except blocks. Code that might raise an exception goes in try, and error handling goes in except.' },
-            { id: 'card-7', front: 'What is a module?', back: 'A file containing Python code (functions, classes, variables) that can be imported and used in other Python programs.' },
-            { id: 'card-8', front: 'Explain list comprehension.', back: 'A concise way to create lists using a single line: [expression for item in iterable if condition]' }
-        ]
-    },
-    'course-7': {
-        title: 'Personal Finance Flashcards',
-        cards: [
-            { id: 'card-1', front: 'What is the 50/30/20 budget rule?', back: '50% of income for needs, 30% for wants, 20% for savings and debt repayment.' },
-            { id: 'card-2', front: 'What is an emergency fund?', back: '3-6 months of living expenses saved for unexpected situations like job loss or medical emergencies.' },
-            { id: 'card-3', front: 'Define compound interest.', back: 'Interest calculated on the initial principal plus accumulated interest from previous periods.' },
-            { id: 'card-4', front: 'What is a budget?', back: 'A financial plan that tracks income and expenses to help manage money effectively.' },
-            { id: 'card-5', front: 'Good debt vs bad debt?', back: 'Good debt: investments that increase value (education, home). Bad debt: depreciating assets or high-interest consumer debt.' },
-            { id: 'card-6', front: 'What is net worth?', back: 'Total assets minus total liabilities (what you own minus what you owe).' }
-        ]
+// Cache generated decks in localStorage so we don't regenerate every time
+function getCachedDeck(courseId) {
+    try {
+        const saved = localStorage.getItem(FLASHCARD_DECK_KEY);
+        const decks = saved ? JSON.parse(saved) : {};
+        const entry = decks[courseId];
+        // Cache for 24 hours
+        if (entry && (Date.now() - entry.ts < 24 * 60 * 60 * 1000)) {
+            return entry.deck;
+        }
+    } catch (e) { /* ignore */ }
+    return null;
+}
+
+function saveDeckToCache(courseId, deck) {
+    try {
+        const saved = localStorage.getItem(FLASHCARD_DECK_KEY);
+        const decks = saved ? JSON.parse(saved) : {};
+        decks[courseId] = { deck, ts: Date.now() };
+        localStorage.setItem(FLASHCARD_DECK_KEY, JSON.stringify(decks));
+    } catch (e) { /* ignore */ }
+}
+
+// Generate flashcards from lesson content using AI
+async function generateFlashcardsFromContent(courseTitle, lessonContents) {
+    if (!groqApiKey) return null;
+
+    const contentSummary = lessonContents
+        .slice(0, 5) // Use up to 5 lessons to keep prompt size down
+        .map(l => `## ${l.title}\n${(l.content || '').substring(0, 500)}`)
+        .join('\n\n');
+
+    const prompt = `Based on this course "${courseTitle}" with the following lesson content, generate exactly 8 flashcards for studying.
+
+${contentSummary}
+
+Return ONLY a valid JSON array of objects with "front" (question) and "back" (answer) properties. Keep answers concise (1-2 sentences max). Make questions specific to the actual course content, not generic.
+
+Example format:
+[{"front": "What is X?", "back": "X is..."}]`;
+
+    try {
+        const groq = new Groq({ apiKey: groqApiKey, dangerouslyAllowBrowser: true });
+        const response = await groq.chat.completions.create({
+            messages: [{ role: 'user', content: prompt }],
+            model: 'llama-3.3-70b-versatile',
+            temperature: 0.3,
+            max_tokens: 1500
+        });
+
+        const text = response.choices[0]?.message?.content || '';
+        // Extract JSON array from response
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+            const cards = JSON.parse(jsonMatch[0]);
+            return cards.map((card, i) => ({
+                id: `ai-card-${i + 1}`,
+                front: card.front,
+                back: card.back
+            }));
+        }
+    } catch (error) {
+        console.error('Error generating flashcards:', error);
     }
-};
+    return null;
+}
 
-export const flashcardService = {
-    getDeck: (courseId) => {
-        if (flashcardDecks[courseId]) {
-            return flashcardDecks[courseId];
+// Extract flashcards from existing lesson content (no AI needed)
+function extractFlashcardsFromContent(courseTitle, lessonContents) {
+    const cards = [];
+    let cardId = 1;
+
+    for (const lesson of lessonContents) {
+        if (!lesson.content) continue;
+
+        // Extract key takeaways section
+        const takeawayMatch = lesson.content.match(/## Key Takeaways\s*\n([\s\S]*?)(?=\n## |\n---|\n$)/i);
+        if (takeawayMatch) {
+            const bullets = takeawayMatch[1].match(/[-*] (.+)/g);
+            if (bullets) {
+                for (const bullet of bullets.slice(0, 2)) { // Max 2 cards per lesson
+                    const text = bullet.replace(/^[-*] /, '').trim();
+                    if (text.length > 10) {
+                        cards.push({
+                            id: `ext-card-${cardId++}`,
+                            front: `What is a key concept from "${lesson.title}"?`,
+                            back: text
+                        });
+                    }
+                }
+            }
         }
 
-        // Generic fallback deck
-        return {
-            title: 'Course Concepts',
-            cards: [
-                { id: 'gen-1', front: 'What is the main goal of this topic?', back: 'To understand the core principles and apply them effectively.' },
-                { id: 'gen-2', front: 'Why is this important?', back: 'It provides a foundation for advanced skills and real-world problem solving.' },
-                { id: 'gen-3', front: 'Key Terminology', back: 'Review the glossary terms introduced in Module 1.' },
-                { id: 'gen-4', front: 'Practical Application', back: 'Think of a real-world scenario where you would use this concept.' }
-            ]
-        };
+        // Extract learning objectives
+        const objectiveMatch = lesson.content.match(/## Learning Objectives\s*\n([\s\S]*?)(?=\n## |\n---|\n$)/i);
+        if (objectiveMatch) {
+            const bullets = objectiveMatch[1].match(/[-*] (.+)/g);
+            if (bullets && bullets.length > 0) {
+                const text = bullets[0].replace(/^[-*] /, '').trim();
+                cards.push({
+                    id: `ext-card-${cardId++}`,
+                    front: `Learning objective for "${lesson.title}"?`,
+                    back: text
+                });
+            }
+        }
+
+        if (cards.length >= 8) break; // Cap at 8 cards
+    }
+
+    return cards.length > 0 ? cards : null;
+}
+
+export const flashcardService = {
+    getDeck: async (courseId) => {
+        // Check cache first
+        const cached = getCachedDeck(courseId);
+        if (cached) return cached;
+
+        try {
+            // Fetch course title and lesson content from Supabase
+            const { data: course } = await supabase
+                .from('courses')
+                .select('title')
+                .eq('id', courseId)
+                .single();
+
+            const { data: modules } = await supabase
+                .from('modules')
+                .select('id, lessons(id, title, content)')
+                .eq('course_id', courseId)
+                .order('order_index', { ascending: true });
+
+            const lessonContents = modules
+                ?.flatMap(m => m.lessons || [])
+                .filter(l => l.content) || [];
+
+            if (lessonContents.length === 0) {
+                return { title: `${course?.title || 'Course'} Flashcards`, cards: [] };
+            }
+
+            const courseTitle = course?.title || 'Course';
+
+            // Try AI generation first, then content extraction as fallback
+            let cards = await generateFlashcardsFromContent(courseTitle, lessonContents);
+            if (!cards) {
+                cards = extractFlashcardsFromContent(courseTitle, lessonContents);
+            }
+            if (!cards) {
+                // Last resort fallback — generate basic cards from lesson titles
+                cards = lessonContents.slice(0, 6).map((l, i) => ({
+                    id: `basic-card-${i + 1}`,
+                    front: `What are the key concepts of "${l.title}"?`,
+                    back: (l.content || '').substring(0, 200).replace(/[#*`]/g, '').trim() + '...'
+                }));
+            }
+
+            const deck = { title: `${courseTitle} Flashcards`, cards };
+            saveDeckToCache(courseId, deck);
+            return deck;
+        } catch (error) {
+            console.error('Error loading flashcard deck:', error);
+            return { title: 'Flashcards', cards: [] };
+        }
     },
 
     getProgress: (userId, courseId) => {
@@ -62,7 +188,6 @@ export const flashcardService = {
 
         if (!allProgress[key].masteredCards.includes(cardId)) {
             allProgress[key].masteredCards.push(cardId);
-            // Remove from studying if present
             allProgress[key].studyingCards = allProgress[key].studyingCards.filter(id => id !== cardId);
         }
 

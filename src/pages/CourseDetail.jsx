@@ -31,6 +31,8 @@ const CourseDetail = () => {
     const [showQuiz, setShowQuiz] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [flashcardProgress, setFlashcardProgress] = useState(null);
+    const [deck, setDeck] = useState(null);
+    const [isLoadingFlashcards, setIsLoadingFlashcards] = useState(false);
     const [newBadges, setNewBadges] = useState([]);
     const [activeQuizId, setActiveQuizId] = useState(null);
     const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
@@ -118,6 +120,12 @@ const CourseDetail = () => {
                     }
                     setExpandedModules(newExpanded);
                 }
+                // Load flashcards in background (async, don't block initial render)
+                setIsLoadingFlashcards(true);
+                flashcardService.getDeck(courseId).then(deckData => {
+                    setDeck(deckData);
+                    setIsLoadingFlashcards(false);
+                }).catch(() => setIsLoadingFlashcards(false));
             } catch (error) {
                 console.error("Error loading course data:", error);
                 setError(error.message || "Failed to load course");
@@ -214,7 +222,6 @@ const CourseDetail = () => {
         ? Math.round((progress.completedLessons.length / content.modules.reduce((acc, m) => acc + m.lessons.length, 0)) * 100) || 0
         : 0;
 
-    const deck = flashcardService.getDeck(courseId);
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -331,7 +338,16 @@ const CourseDetail = () => {
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white">Learning Tools</h3>
 
                         {/* Flashcards */}
-                        {deck.cards.length > 0 && (
+                        {isLoadingFlashcards ? (
+                            <button
+                                disabled
+                                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl p-4 opacity-70"
+                            >
+                                <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin" />
+                                <p className="font-semibold">Generating Flashcards...</p>
+                                <p className="text-sm opacity-90">Creating cards from your lessons</p>
+                            </button>
+                        ) : deck && deck.cards && deck.cards.length > 0 ? (
                             <button
                                 onClick={() => setShowFlashcards(true)}
                                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl p-4 hover:shadow-lg transition-all"
@@ -340,7 +356,7 @@ const CourseDetail = () => {
                                 <p className="font-semibold">Study Flashcards</p>
                                 <p className="text-sm opacity-90">{deck.cards.length} cards available</p>
                             </button>
-                        )}
+                        ) : null}
 
                         {/* Quiz */}
                         <button
@@ -409,7 +425,7 @@ const CourseDetail = () => {
             </main>
 
             {/* Modals */}
-            {showFlashcards && deck.cards.length > 0 && (
+            {showFlashcards && deck && deck.cards && deck.cards.length > 0 && (
                 <Flashcards
                     deck={deck}
                     progress={flashcardProgress}

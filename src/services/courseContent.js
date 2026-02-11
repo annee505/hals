@@ -1,4 +1,5 @@
 import { supabase } from './supabase-config';
+import { clearEnrollmentCache } from './database';
 
 // Simple in-memory cache to avoid re-fetching when navigating back
 const courseCache = new Map();
@@ -204,6 +205,8 @@ export const courseContentService = {
                 console.error('Error updating enrollment progress:', updateError);
             } else {
                 console.log('Successfully updated progress to', percentage, '%');
+                // Clear enrollment cache so Profile shows fresh progress
+                clearEnrollmentCache(userId);
             }
 
             return percentage;

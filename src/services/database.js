@@ -14,6 +14,11 @@ function setCache(key, data) {
     cache.set(key, { data, ts: Date.now() });
 }
 
+// Exported so courseContent can invalidate enrollment cache when progress changes
+export function clearEnrollmentCache(userId) {
+    cache.delete(`enrollments_${userId}`);
+}
+
 export const database = {
     // User operations
 
