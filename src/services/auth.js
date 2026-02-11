@@ -77,14 +77,12 @@ export const authService = {
             if (error) throw error;
             if (!data.user) throw new Error('No user returned');
 
-            // Fetch full profile
-            const profile = await database.findUserByEmail(email);
-
-            // Return combined user object
+            // Return only the auth user immediately for speed
+            // Profile will be fetched by AuthContext in the background
             return {
                 id: data.user.id,
                 email: data.user.email,
-                ...profile
+                // We don't block on profile fetch here to prevent hangs
             };
         } catch (error) {
             console.error('[Auth] Login error:', error);
