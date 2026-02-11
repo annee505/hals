@@ -263,13 +263,14 @@ Use ONLY this format for videos (replace TOPIC with the lesson topic):
 [Search "${lesson.title}" on YouTube](https://www.youtube.com/results?search_query=${encodeURIComponent(lesson.title)})
 
 ## 🔗 External Resources
-ONLY use these verified links - pick 2-3 relevant ones:
-- [MDN Web Docs](https://developer.mozilla.org)
-- [FreeCodeCamp](https://www.freecodecamp.org)
-- [W3Schools](https://www.w3schools.com)
-- [GeeksforGeeks](https://www.geeksforgeeks.org)
+GENERATE 2-3 RELEVANT SEARCH LINKS using these formats (replace TOPIC with the specific lesson keyword):
 
-CRITICAL: Do NOT invent or hallucinate any URLs. Only use the exact link formats above.
+- [MDN: TOPIC](https://developer.mozilla.org/en-US/search?q=TOPIC)
+- [GeeksforGeeks: TOPIC](https://www.geeksforgeeks.org/search?q=TOPIC)
+- [StackOverflow: TOPIC](https://stackoverflow.com/search?q=TOPIC)
+- [Dev.to: TOPIC](https://dev.to/search?q=TOPIC)
+
+CRITICAL: URL Encode the TOPIC in the links (e.g. "JS%20Functions").
 Use rich Markdown formatting throughout.`;
 
                     let content = await tryGroq(contentPrompt);

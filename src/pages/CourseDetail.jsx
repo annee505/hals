@@ -35,6 +35,10 @@ const CourseDetail = () => {
     const [activeQuizId, setActiveQuizId] = useState(null);
     const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
 
+    // Loading state
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
     const [showCompletionModal, setShowCompletionModal] = useState(false);
     const location = useLocation();
 
@@ -73,40 +77,52 @@ const CourseDetail = () => {
     useEffect(() => {
         const loadData = async () => {
             if (!user) return;
+            setIsLoading(true);
+            setError(null);
 
             try {
-                const courseData = await database.getCourseById(courseId);
+                // Parallel fetch for speed
+                const [courseData, courseContent, userProgress, files, fcProgress] = await Promise.all([
+                    database.getCourseById(courseId),
+                    courseContentService.getCourseContent(courseId),
+                    courseContentService.getProgress(user.id, courseId),
+                    aiKnowledgeService.getUserFiles(user.id),
+                    flashcardService.getProgress(user.id, courseId)
+                ]);
+
+                if (!courseData) throw new Error("Course not found");
+
                 setCourse(courseData);
-
-                const courseContent = await courseContentService.getCourseContent(courseId);
                 setContent(courseContent);
-
-                const userProgress = await courseContentService.getProgress(user.id, courseId);
                 setProgress(userProgress);
+                setUploadedFiles(files.filter(f => f.courseId === courseId || !f.courseId));
+                setFlashcardProgress(fcProgress);
 
                 // Auto-expand first module with incomplete lessons
-                if (courseContent.modules && courseContent.modules.length > 0) {
+                if (courseContent && courseContent.modules && courseContent.modules.length > 0) {
                     const completedSet = new Set(userProgress.completedLessons || []);
+                    let found = false;
+                    const newExpanded = {};
+
                     for (const mod of courseContent.modules) {
                         const hasIncomplete = mod.lessons?.some(lesson => !completedSet.has(lesson.id));
                         if (hasIncomplete) {
-                            setExpandedModules({ [mod.id]: true });
+                            newExpanded[mod.id] = true;
+                            found = true;
                             break;
                         }
                     }
                     // If all complete, expand the last module
-                    if (Object.keys(expandedModules).length === 0 && courseContent.modules.length > 0) {
-                        setExpandedModules({ [courseContent.modules[0].id]: true });
+                    if (!found && courseContent.modules.length > 0) {
+                        newExpanded[courseContent.modules[0].id] = true;
                     }
+                    setExpandedModules(newExpanded);
                 }
-
-                const files = aiKnowledgeService.getUserFiles(user.id);
-                setUploadedFiles(files.filter(f => f.courseId === courseId || !f.courseId));
-
-                const fcProgress = flashcardService.getProgress(user.id, courseId);
-                setFlashcardProgress(fcProgress);
             } catch (error) {
                 console.error("Error loading course data:", error);
+                setError(error.message || "Failed to load course");
+            } finally {
+                setIsLoading(false);
             }
         };
 
@@ -176,11 +192,23 @@ const CourseDetail = () => {
         }
     };
 
-    if (!user || !course || !content || !progress) return (
+    if (isLoading) return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
     );
+
+    if (error) return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+            <div className="text-red-500 text-xl font-bold mb-2">Error Loading Course</div>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
+            <button onClick={() => navigate('/dashboard')} className="text-primary hover:underline">
+                Return to Dashboard
+            </button>
+        </div>
+    );
+
+    if (!course || !content || !progress) return null;
 
     const progressPercentage = progress.completedLessons && content.modules
         ? Math.round((progress.completedLessons.length / content.modules.reduce((acc, m) => acc + m.lessons.length, 0)) * 100) || 0

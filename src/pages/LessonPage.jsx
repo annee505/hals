@@ -20,10 +20,13 @@ const LessonPage = () => {
     const [currentModule, setCurrentModule] = useState(null);
     const [progress, setProgress] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const loadLessonData = async () => {
             if (!user) return;
+            setLoading(true);
+            setError(null);
 
             try {
                 // Fetch course info and content structure
@@ -41,12 +44,14 @@ const LessonPage = () => {
                 let foundLesson = null;
                 let foundModule = null;
 
-                for (const mod of courseContent.modules) {
-                    const lesson = mod.lessons.find(l => l.id.toString() === lessonId || l.id === lessonId);
-                    if (lesson) {
-                        foundLesson = lesson;
-                        foundModule = mod;
-                        break;
+                if (courseContent && courseContent.modules) {
+                    for (const mod of courseContent.modules) {
+                        const lesson = mod.lessons?.find(l => l.id.toString() === lessonId || l.id === lessonId);
+                        if (lesson) {
+                            foundLesson = lesson;
+                            foundModule = mod;
+                            break;
+                        }
                     }
                 }
 
@@ -55,11 +60,12 @@ const LessonPage = () => {
                     setCurrentModule(foundModule);
                 } else {
                     console.error("Lesson not found");
-                    // navigate(`/course/${courseId}`); // fallback
+                    setError("Lesson not found");
                 }
 
             } catch (error) {
                 console.error("Error loading lesson:", error);
+                setError("Failed to load lesson content");
             } finally {
                 setLoading(false);
             }
@@ -68,64 +74,28 @@ const LessonPage = () => {
         loadLessonData();
     }, [courseId, lessonId, user]);
 
-    const handleComplete = async () => {
-        if (!user || !currentLesson) return;
+    // ... helper handlers ...
 
-        // Optimistic update
-        const alreadyCompleted = progress?.completedLessons.includes(currentLesson.id);
-        if (alreadyCompleted) return; // Already done
-
-        try {
-            await courseContentService.markLessonComplete(user.id, courseId, currentLesson.id);
-
-            // Refresh progress
-            const newProgress = await courseContentService.getProgress(user.id, courseId);
-            setProgress(newProgress);
-
-            // Gamification
-            gamificationService.addXP(10);
-        } catch (error) {
-            console.error("Error marking complete:", error);
-        }
-    };
-
-    const handleNext = () => {
-        // Logic to find next lesson
-        if (!content || !currentLesson) return;
-
-        let allLessons = [];
-        content.modules.forEach(m => allLessons.push(...m.lessons));
-
-        const currentIndex = allLessons.findIndex(l => l.id === currentLesson.id);
-        if (currentIndex < allLessons.length - 1) {
-            const nextLesson = allLessons[currentIndex + 1];
-            navigate(`/course/${courseId}/lesson/${nextLesson.id}`);
-        } else {
-            // Course Complete!
-            navigate(`/course/${courseId}`, { state: { courseCompleted: true } });
-        }
-    };
-
-    const handlePrev = () => {
-        if (!content || !currentLesson) return;
-
-        let allLessons = [];
-        content.modules.forEach(m => allLessons.push(...m.lessons));
-
-        const currentIndex = allLessons.findIndex(l => l.id === currentLesson.id);
-        if (currentIndex > 0) {
-            const prevLesson = allLessons[currentIndex - 1];
-            navigate(`/course/${courseId}/lesson/${prevLesson.id}`);
-        }
-    };
-
-    if (loading || !currentLesson) {
+    if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
         );
     }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <p className="text-red-500 mb-4">{error}</p>
+                <button onClick={() => navigate(`/course/${courseId}`)} className="text-primary hover:underline">
+                    Back to Course
+                </button>
+            </div>
+        );
+    }
+
+    if (!currentLesson) return null;
 
     const isCompleted = progress?.completedLessons.includes(currentLesson.id);
 
