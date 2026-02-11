@@ -1,5 +1,9 @@
 import { supabase } from './supabase-config';
 
+// Simple in-memory cache to avoid re-fetching when navigating back
+const courseCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export const courseContentService = {
     // Get the first incomplete lesson for "continue where you left off"
     getLastLesson: async (userId, courseId) => {
@@ -44,6 +48,12 @@ export const courseContentService = {
         }
     },
     getCourseContent: async (courseId) => {
+        // Check cache first — avoid re-fetching when navigating back
+        const cached = courseCache.get(courseId);
+        if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+            return cached.data;
+        }
+
         // Fetch modules and lessons
         const { data: modules, error: modulesError } = await supabase
             .from('modules')
@@ -62,7 +72,12 @@ export const courseContentService = {
             lessons: mod.lessons.sort((a, b) => a.order_index - b.order_index)
         }));
 
-        return { modules: sortedModules };
+        const result = { modules: sortedModules };
+
+        // Cache the result
+        courseCache.set(courseId, { data: result, timestamp: Date.now() });
+
+        return result;
     },
 
     getProgress: async (userId, courseId) => {

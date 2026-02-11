@@ -315,7 +315,7 @@ Brief overview of what will be covered.
 - Bullet points of what learners will achieve
 
 ## Core Concepts
-Detailed explanation with examples. Use tables, diagrams (ASCII/text), and clear formatting.
+Detailed explanation with examples. Use **markdown tables** for comparisons and timelines — NEVER use ASCII art or text-based diagrams. Use clear formatting with headers, bold, and bullet lists.
 
 ## Code Example (if applicable)
 \`\`\`javascript
