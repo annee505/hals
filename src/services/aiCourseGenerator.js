@@ -69,47 +69,44 @@ function generateLocalCourse(userGoal) {
 // Generate rich lesson content locally
 function generateLocalLessonContent(lessonTitle, moduleName, courseName) {
     const encodedTitle = encodeURIComponent(lessonTitle);
+    const encodedCourse = encodeURIComponent(courseName);
     return `## ${lessonTitle}
 
 Welcome to **${lessonTitle}**! Part of "${moduleName}" in "${courseName}".
 
 ### 📚 Introduction
-This lesson covers essential concepts and practical applications of ${lessonTitle}.
+In this lesson, we dive into **${lessonTitle}** — a key topic within ${moduleName}. Understanding this subject will give you practical knowledge and a deeper appreciation for ${courseName}.
 
 ### 🎯 Learning Objectives
-- Understand core principles of ${lessonTitle}
-- Apply concepts in real-world scenarios
-- Build confidence in your abilities
+- Understand the history and significance of ${lessonTitle}
+- Identify key figures, events, and milestones related to this topic
+- Analyze how ${lessonTitle} connects to the broader themes of ${courseName}
+- Apply your understanding through reflection and further exploration
 
 ### 📖 Core Concepts
-**Key Points:**
-1. **Foundation** — Understanding basics gives you a solid start
-2. **Practice** — Regular practice reinforces learning
-3. **Application** — Real-world application cements knowledge
 
-### 💻 Code Example
-\`\`\`javascript
-// Example for ${lessonTitle}
-function example() {
-    console.log("Learning: ${lessonTitle}");
-    return "Mastering " + "${lessonTitle}";
-}
-example();
-\`\`\`
+This topic explores several important dimensions:
+
+- **Historical Context** — Every subject has a story. Understanding where ${lessonTitle} fits in the timeline helps you see the bigger picture.
+- **Key Figures & Contributions** — Learn about the people who shaped this area and their lasting impact.
+- **Evolution & Impact** — See how ideas, techniques, and movements developed over time and influenced what came after.
+
+> 💡 *Take a moment to think about what you already know about this subject before reading further. Connecting new knowledge to existing understanding strengthens retention.*
 
 ### ✅ Key Takeaways
-- ${lessonTitle} is essential for building a foundation
-- Practice regularly to reinforce understanding
-- Apply what you learn to real projects
-- Revisit this lesson as needed
+- ${lessonTitle} plays an important role in ${courseName}
+- Understanding the context and key figures deepens your knowledge
+- This topic connects to broader themes you will explore in other lessons
+- Continue exploring through the resources below
 
 ### 📺 Recommended Videos
-- [${lessonTitle} — Full Tutorial](https://www.youtube.com/results?search_query=${encodedTitle}+full+tutorial)
-- [${lessonTitle} — Explained Simply](https://www.youtube.com/results?search_query=${encodedTitle}+explained+for+beginners)
+- [${lessonTitle} — Full Overview](https://www.youtube.com/results?search_query=${encodedTitle}+overview)
+- [${courseName} — Documentary](https://www.youtube.com/results?search_query=${encodedCourse}+documentary)
 
 ### 🔗 Curated Resources
-- [${lessonTitle} — Wikipedia](https://en.wikipedia.org/wiki/${encodedTitle})
-- [${lessonTitle} — Google Scholar](https://scholar.google.com/scholar?q=${encodedTitle})`;
+- [${lessonTitle} — Wikipedia](https://en.wikipedia.org/wiki/${encodedTitle.replace(/%20/g, '_')})
+- [${courseName} — Google Scholar](https://scholar.google.com/scholar?q=${encodedCourse})
+- [Explore ${lessonTitle} — YouTube](https://www.youtube.com/results?search_query=${encodedTitle})`;
 }
 
 // Try to generate with Gemini
@@ -300,7 +297,14 @@ RESPOND ONLY WITH JSON:
                     const styleBlock = getStyleInstructions(learningStyle);
                     const paceBlock = getPaceAndDepthInstructions(pace, contentDepth);
 
-                    const contentPrompt = `Write a comprehensive 600+ word lesson for "${lesson.title}" in the course "${courseData.title}".
+                    const contentPrompt = `Write a comprehensive, FACTUALLY RICH 600+ word lesson on "${lesson.title}" in the course "${courseData.title}".
+
+CRITICAL RULES:
+- Write REAL, SUBSTANTIVE content with actual facts, dates, names, and details about the topic.
+- Do NOT write generic filler like "this topic is important" or "practice makes perfect".
+- Every paragraph must contain SPECIFIC, factual information directly about "${lesson.title}".
+- Only include a Code Example section if the course is about programming, software development, or a technical coding topic. If the course is about history, music, art, science, business, or any non-programming topic, do NOT include any code blocks at all.
+- Use markdown tables where appropriate (timelines, comparisons, etc.). NEVER use ASCII art or box-drawing characters.
 
 ${styleBlock}
 
@@ -309,21 +313,19 @@ ${paceBlock}
 STRUCTURE YOUR CONTENT LIKE THIS:
 
 ## Introduction
-Brief overview of what will be covered.
+A substantive overview with real context about the topic — mention key figures, time periods, or foundational ideas.
 
 ## Learning Objectives
-- Bullet points of what learners will achieve
+- Specific, topic-relevant bullets about what learners will understand
 
 ## Core Concepts
-Detailed explanation with examples. Where it helps understanding, include a **markdown table** to show timelines, comparisons, or evolution of ideas. For example, a table with columns like | Era | Key Figures | Characteristics |. NEVER use ASCII art, box-drawing characters, or text-based diagrams — always use proper markdown tables instead. Use headers, bold, blockquotes, and bullet lists for structure.
+Detailed, fact-rich explanation. Use real names, dates, events, examples. Include a **markdown table** if it helps illustrate timelines, comparisons, or categories. Use headers, bold, blockquotes, and bullet lists for structure.
 
-## Code Example (if applicable)
-\`\`\`javascript
-// Working code example
-\`\`\`
+## Practical Application
+How this knowledge applies in real-world contexts — analysis exercises, discussion questions, or hands-on activities relevant to the subject.
 
 ## Key Takeaways
-- Summary bullets
+- Specific summary bullets that reference actual content covered
 
 ## 📺 Recommended Videos
 Recommend 2-3 SPECIFIC, well-known YouTube videos that are genuinely useful for learning "${lesson.title}".
@@ -335,25 +337,21 @@ For each video, provide:
 Format each video as a link using this pattern:
 [Video Title — Channel Name](https://www.youtube.com/results?search_query=EXACT+VIDEO+TITLE+CHANNEL+NAME)
 
-EXAMPLE (do not use this, pick REAL videos for the topic):
-[JavaScript Crash Course for Beginners — Traversy Media](https://www.youtube.com/results?search_query=JavaScript+Crash+Course+for+Beginners+Traversy+Media)
-
-Pick videos from well-known educational channels relevant to this subject area. These should be REAL videos you are confident exist.
+Pick videos from well-known educational channels relevant to this subject area.
 
 ## 🔗 Curated Resources
-Provide 3-4 resource links using ONLY these safe URL patterns that are guaranteed to work:
+Provide 3-4 resource links using ONLY these safe URL patterns:
 
 1. **Wikipedia**: [Topic Name — Wikipedia](https://en.wikipedia.org/wiki/TOPIC_WITH_UNDERSCORES)
 2. **Google Scholar**: [Research on Topic — Google Scholar](https://scholar.google.com/scholar?q=URL+ENCODED+TOPIC)
 3. **YouTube Search**: [Topic tutorials — YouTube](https://www.youtube.com/results?search_query=URL+ENCODED+TOPIC)
 
 Then add 1-2 links ONLY from these domains using their ACTUAL known URL patterns:
-- MDN: https://developer.mozilla.org/en-US/docs/...
 - Wikipedia: https://en.wikipedia.org/wiki/...
 - Khan Academy: https://www.khanacademy.org/...
 - Britannica: https://www.britannica.com/topic/...
 
-CRITICAL: Do NOT invent or guess URLs. If you are not 100% certain a URL exists, use a search query link instead (YouTube search, Google Scholar search). Never fabricate article URLs.
+CRITICAL: Do NOT invent or guess URLs. Use search query links if unsure.
 
 Use rich Markdown formatting throughout — headers, bold, tables, bullet lists, blockquotes.`;
 
