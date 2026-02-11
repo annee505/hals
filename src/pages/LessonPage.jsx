@@ -51,19 +51,6 @@ const LessonPage = () => {
                 let foundLesson = null;
                 let foundModule = null;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-                if (courseContent && courseContent.modules) {
-                    for (const mod of courseContent.modules) {
-                        const lesson = mod.lessons?.find(l => l.id.toString() === lessonId || l.id === lessonId);
-                        if (lesson) {
-                            foundLesson = lesson;
-                            foundModule = mod;
-                            break;
-                        }
-=======
-=======
->>>>>>> 4a95198 (fix(LessonPage): prevent crash on missing course data)
                 for (const mod of courseContent.modules) {
                     if (!mod.lessons) continue; // Skip if no lessons in module
 
@@ -72,10 +59,6 @@ const LessonPage = () => {
                         foundLesson = lesson;
                         foundModule = mod;
                         break;
-<<<<<<< HEAD
->>>>>>> 2447d69 (fix(LessonPage): prevent crash on missing course data)
-=======
->>>>>>> 4a95198 (fix(LessonPage): prevent crash on missing course data)
                     }
                 }
 
@@ -157,7 +140,6 @@ const LessonPage = () => {
         );
     }
 
-<<<<<<< HEAD
     if (error) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -171,14 +153,7 @@ const LessonPage = () => {
 
     if (!currentLesson) return null;
 
-<<<<<<< HEAD
-    const isCompleted = progress?.completedLessons.includes(currentLesson.id);
-=======
     const isCompleted = progress?.completedLessons?.includes(currentLesson.id) || false;
->>>>>>> 2447d69 (fix(LessonPage): prevent crash on missing course data)
-=======
-    const isCompleted = progress?.completedLessons?.includes(currentLesson.id) || false;
->>>>>>> 4a95198 (fix(LessonPage): prevent crash on missing course data)
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors">
