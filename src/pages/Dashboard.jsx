@@ -159,33 +159,13 @@ const Dashboard = () => {
         setGenerationStep('🎯 Analyzing your learning goal...');
 
         try {
-            // Simulate progress steps with timing
-            const progressSteps = [
-                { step: '📚 Creating course outline...', delay: 2000 },
-                { step: '📖 Generating Module 1...', delay: 3000 },
-                { step: '📖 Generating Module 2...', delay: 3000 },
-                { step: '📖 Generating Module 3...', delay: 3000 },
-                { step: '✨ Adding lesson content...', delay: 4000 },
-                { step: '🎉 Finalizing your course...', delay: 2000 }
-            ];
-
-            // Start progress animation in background
-            let stepIndex = 0;
-            const progressInterval = setInterval(() => {
-                if (stepIndex < progressSteps.length) {
-                    setGenerationStep(progressSteps[stepIndex].step);
-                    stepIndex++;
-                }
-            }, 2500);
-
             const course = await aiCourseGenerator.generateCourse(generationGoal, {
                 learningStyle: user.learningStyle,
                 hobbies: user.hobbies,
                 pace: user.pace || 'balanced',
                 contentDepth: user.contentDepth || 'standard'
-            });
+            }, (progressMsg) => setGenerationStep(progressMsg));
 
-            clearInterval(progressInterval);
             setGenerationStep('✅ Course created successfully!');
 
             // Auto-enroll
