@@ -11,7 +11,7 @@ import { Edit, BookOpen, Award, Target } from 'lucide-react';
 
 const Profile = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, refreshProfile } = useAuth();
     const [enrollments, setEnrollments] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({});
@@ -39,11 +39,15 @@ const Profile = () => {
         loadData();
     }, [user, navigate]);
 
-    const handleUpdate = () => {
-        authService.updateProfile(formData);
-        // User context should ideally update here, but for now local mutation or re-fetch is fine
-        // Since we are using context, we can just close mode. Context might need refresh logic later.
-        setIsEditing(false);
+    const handleUpdate = async () => {
+        try {
+            await database.updateUserProfile(user.id, formData);
+            await refreshProfile();
+            setIsEditing(false);
+        } catch (error) {
+            console.error('Failed to update profile:', error);
+            // Optionally show error state to user
+        }
     };
 
     if (!user) return <div>Loading...</div>;

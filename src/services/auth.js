@@ -1,4 +1,5 @@
 import { database } from './database';
+import { supabase } from './supabase-config';
 
 const SESSION_KEY = 'hals_session';
 
@@ -6,132 +7,135 @@ export const authService = {
     // Email/Password signup
     signup: async (email, password, profile) => {
         try {
-            const user = await database.createUser(email, password, profile);
-            // Auto-login after signup
-            authService.createSession(user);
-            return user;
+            console.log('[Auth] Starting signup for:', email);
+
+            // 1. Sign up with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        name: profile.name,
+                        hobbies: profile.hobbies,
+                        learning_style: profile.learningStyle,
+                        goal: profile.goal
+                    }
+                }
+            });
+
+            if (authError) throw authError;
+
+            if (authData?.user) {
+                // 2. Create profile in database
+                // We do this explicitly to ensure the users table is in sync
+                const { error: profileError } = await supabase
+                    .from('users')
+                    .insert({
+                        id: authData.user.id,
+                        email: email,
+                        name: profile.name,
+                        hobbies: profile.hobbies || '',
+                        learning_style: profile.learningStyle || 'visual',
+                        goal: profile.goal || ''
+                    });
+
+                if (profileError) {
+                    // Ignore unique violation if it happens (idempotency)
+                    if (profileError.code !== '23505') {
+                        console.error('[Auth] Profile creation failed:', profileError);
+                        // We don't throw here to avoid blocking the user if auth succeeded
+                    }
+                }
+
+                // Construct user object
+                const user = {
+                    id: authData.user.id,
+                    email,
+                    ...profile
+                };
+
+                return user;
+            }
+            throw new Error('Signup failed - no user returned');
         } catch (error) {
-            throw error;
+            console.error('[Auth] Signup error:', error);
+            const message = error?.message || 'Signup failed. Please try again.';
+            throw new Error(message);
         }
     },
 
     login: async (email, password) => {
         try {
-            const user = await database.authenticateUser(email, password);
-            if (!user) {
-                throw new Error('User not found');
-            }
-            authService.createSession(user);
-            return user;
+            console.log('[Auth] Logging in:', email);
+
+            // Direct Supabase login - no manual timeouts, no pre-clearing
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) throw error;
+            if (!data.user) throw new Error('No user returned');
+
+            // Fetch full profile
+            const profile = await database.findUserByEmail(email);
+
+            // Return combined user object
+            return {
+                id: data.user.id,
+                email: data.user.email,
+                ...profile
+            };
         } catch (error) {
+            console.error('[Auth] Login error:', error);
             const message = error?.message || 'Login failed. Please check your credentials.';
             throw new Error(message);
         }
     },
 
-    // Google OAuth mock (updated to be async compatible)
+    // Google OAuth mock (kept as is for now, or could be real OAuth)
     googleLogin: async (mockGoogleProfile) => {
         const email = mockGoogleProfile.email;
-
-        // Check if user exists
         let user = await database.findUserByEmail(email);
 
         if (!user) {
-            // Create new user from Google profile
-            user = await database.createUser(email, 'google-oauth', {
-                name: mockGoogleProfile.name,
-                hobbies: '',
-                learningStyle: 'visual',
-                goal: ''
+            // For mock, we just skip the auth part and assume trust
+            // In a real app, this would use supabase.auth.signInWithOAuth
+            const { data: authData, error } = await supabase.auth.signUp({
+                email,
+                password: 'google-oauth-placeholder-' + Date.now(), // Dummy password
             });
-        }
 
-        authService.createSession(user);
+            if (authData?.user) {
+                await supabase.from('users').insert({
+                    id: authData.user.id,
+                    email,
+                    name: mockGoogleProfile.name,
+                    hobbies: '',
+                    learning_style: 'visual',
+                    goal: ''
+                });
+                user = await database.findUserByEmail(email);
+            }
+        }
         return user;
     },
 
-    createSession: (user) => {
-        if (!user || !user.id || !user.email) {
-            throw new Error('Invalid user data for session');
-        }
-        const session = {
-            userId: user.id,
-            email: user.email,
-            profile: {
-                name: user.name || '',
-                hobbies: user.hobbies || '',
-                learningStyle: user.learning_style || '',
-                goal: user.goal || ''
-            },
-            isAuthenticated: true,
-            createdAt: new Date().toISOString()
-        };
-        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    },
-
     logout: async () => {
-        // Clear Supabase auth session
-        const { supabase } = await import('./supabase-config');
-        await supabase.auth.signOut();
-
-        // Clear local session data
-        localStorage.removeItem(SESSION_KEY);
-        localStorage.removeItem('hals-auth-token'); // Also clear the Supabase storage key
-    },
-
-    getUser: () => {
-        const session = localStorage.getItem(SESSION_KEY);
-        if (!session) return null;
-
-        const parsedSession = JSON.parse(session);
-        return {
-            id: parsedSession.userId,
-            email: parsedSession.email,
-            ...parsedSession.profile,
-            isAuthenticated: true
-        };
-    },
-
-    // Get fresh user data from server
-    refreshUser: async () => {
-        const session = localStorage.getItem(SESSION_KEY);
-        if (!session) return null;
-
-        const parsedSession = JSON.parse(session);
-        const user = await database.findUserByEmail(parsedSession.email);
-
-        if (user) {
-            authService.createSession(user);
-            return {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                hobbies: user.hobbies,
-                learningStyle: user.learning_style,
-                goal: user.goal,
-                isAuthenticated: true
-            };
+        try {
+            await supabase.auth.signOut();
+            localStorage.removeItem(SESSION_KEY);
+            localStorage.removeItem('hals-auth-token');
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Force clear local storage anyway
+            localStorage.clear();
         }
-        return null;
     },
 
-    updateProfile: async (profileData) => {
-        const user = authService.getUser();
-        if (!user) return null;
-
-        const updatedUser = await database.updateUserProfile(user.id, profileData);
-
-        // Update session
-        authService.createSession(updatedUser);
-
-        return {
-            id: updatedUser.id,
-            email: updatedUser.email,
-            name: updatedUser.name,
-            hobbies: updatedUser.hobbies,
-            learningStyle: updatedUser.learning_style,
-            goal: updatedUser.goal,
-            isAuthenticated: true
-        };
+    // Helper to get current session from proper source
+    getSession: async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        return session;
     }
 };

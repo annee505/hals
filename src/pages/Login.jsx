@@ -160,16 +160,7 @@ const Login = () => {
                         </Link>
                     </p>
 
-                    {error && error.includes('timed out') && (
-                        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
-                            <button
-                                onClick={handleClearSession}
-                                className="text-primary hover:underline font-medium"
-                            >
-                                Clear session and try again
-                            </button>
-                        </p>
-                    )}
+
                 </div>
             </motion.div>
         </div>

@@ -9,9 +9,11 @@ import CoursePreviewModal from '../components/CoursePreviewModal';
 import ThemeToggle from '../components/ThemeToggle';
 import { Sparkles, TrendingUp, Award, ArrowRight } from 'lucide-react';
 
+import { useAuth } from '../context/AuthContext';
+// ...
 const Home = () => {
     const navigate = useNavigate();
-    const [user, setUser] = useState(null);
+    const { user } = useAuth(); // Use context instead of local state
     const [courses, setCourses] = useState([]);
     const [recommendedCourses, setRecommendedCourses] = useState([]);
     const [previewCourse, setPreviewCourse] = useState(null);
@@ -20,15 +22,12 @@ const Home = () => {
 
     useEffect(() => {
         const loadData = async () => {
-            const currentUser = authService.getUser();
-            setUser(currentUser);
-
             try {
                 const allCourses = await database.getAllCourses();
                 setCourses(allCourses);
 
-                if (currentUser) {
-                    const recommended = await database.getRecommendedCourses(currentUser);
+                if (user) {
+                    const recommended = await database.getRecommendedCourses(user);
                     setRecommendedCourses(recommended);
                 } else {
                     setRecommendedCourses(allCourses.slice(0, 6));
@@ -41,7 +40,7 @@ const Home = () => {
         };
 
         loadData();
-    }, []);
+    }, [user]); // Re-run when user changes
 
     const handleEnroll = (course) => {
         setPreviewCourse(course);
