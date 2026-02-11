@@ -1,5 +1,19 @@
 import { supabase } from './supabase-config';
 
+// In-memory cache for fast back-navigation
+const cache = new Map();
+const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+
+function getCached(key) {
+    const entry = cache.get(key);
+    if (entry && (Date.now() - entry.ts < CACHE_TTL)) return entry.data;
+    return null;
+}
+
+function setCache(key, data) {
+    cache.set(key, { data, ts: Date.now() });
+}
+
 export const database = {
     // User operations
 
@@ -30,7 +44,7 @@ export const database = {
             return data;
         } catch (err) {
             console.error('findUserByEmail exception:', err);
-            return null; // Return null on any error (including timeout) to allow app to proceed
+            return null;
         }
     },
 
@@ -55,7 +69,6 @@ export const database = {
             learning_style: profileData.learningStyle,
             goal: profileData.goal
         };
-        // Only include new fields if they exist
         if (profileData.pace) updateData.pace = profileData.pace;
         if (profileData.contentDepth) updateData.content_depth = profileData.contentDepth;
 
@@ -82,6 +95,10 @@ export const database = {
     },
 
     getCourseById: async (courseId) => {
+        const cacheKey = `course_${courseId}`;
+        const cached = getCached(cacheKey);
+        if (cached) return cached;
+
         const { data, error } = await supabase
             .from('courses')
             .select('*')
@@ -89,11 +106,11 @@ export const database = {
             .single();
 
         if (error) throw error;
+        setCache(cacheKey, data);
         return data;
     },
 
     getRecommendedCourses: async (userProfile) => {
-        // Fetch all courses first
         const courses = await database.getAllCourses();
 
         if (!userProfile || !userProfile.goal) return courses.slice(0, 6);
@@ -111,7 +128,6 @@ export const database = {
 
     // Enrollment operations
     enrollInCourse: async (userId, courseId) => {
-        // Check if already enrolled
         const { data: existing } = await supabase
             .from('enrollments')
             .select('*')
@@ -121,7 +137,6 @@ export const database = {
 
         if (existing) throw new Error('Already enrolled');
 
-        // Create enrollment
         const { data, error } = await supabase
             .from('enrollments')
             .insert({
@@ -134,13 +149,19 @@ export const database = {
 
         if (error) throw error;
 
-        // Increment enrolled count
         await supabase.rpc('increment_enrollment_count', { course_id: courseId });
+
+        // Clear cache so new course shows immediately
+        cache.delete(`enrollments_${userId}`);
 
         return data;
     },
 
     getUserEnrollments: async (userId) => {
+        const cacheKey = `enrollments_${userId}`;
+        const cached = getCached(cacheKey);
+        if (cached) return cached;
+
         const { data, error } = await supabase
             .from('enrollments')
             .select(`
@@ -150,6 +171,7 @@ export const database = {
             .eq('user_id', userId);
 
         if (error) throw error;
+        setCache(cacheKey, data);
         return data;
     }
 };

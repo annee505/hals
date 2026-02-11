@@ -48,7 +48,7 @@ const Dashboard = () => {
             try {
                 // Initialize default empty structure for immediate render
                 setCurriculum([]);
-                setStats(curriculumService.getAnalytics());
+                setStats(await curriculumService.getAnalytics(user.id));
                 if (gamificationService) {
                     setGamificationStats(gamificationService.updateStreak());
                     setBadges(gamificationService.getBadges());

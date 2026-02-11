@@ -2,6 +2,29 @@ import React from 'react';
 import { TrendingUp, Award, AlertCircle } from 'lucide-react';
 
 const AnalyticsPanel = ({ stats }) => {
+    if (!stats) {
+        return (
+            <div className="space-y-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div className="animate-pulse space-y-4">
+                        <div className="h-5 bg-gray-200 rounded w-32"></div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="h-20 bg-gray-100 rounded-lg"></div>
+                            <div className="h-20 bg-gray-100 rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <div className="animate-pulse space-y-4">
+                        <div className="h-5 bg-gray-200 rounded w-24"></div>
+                        <div className="h-8 bg-gray-100 rounded"></div>
+                        <div className="h-8 bg-gray-100 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -19,7 +42,9 @@ const AnalyticsPanel = ({ stats }) => {
                             <Award className="w-5 h-5 text-amber-600 mr-2" />
                             <span className="text-sm font-medium text-amber-900">Streak</span>
                         </div>
-                        <span className="text-2xl font-bold text-amber-700">{stats.streak} Days</span>
+                        <span className="text-2xl font-bold text-amber-700">
+                            {stats.streak} {stats.streak === 1 ? 'Day' : 'Days'}
+                        </span>
                     </div>
                 </div>
             </div>

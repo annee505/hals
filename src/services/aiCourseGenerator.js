@@ -315,7 +315,7 @@ Brief overview of what will be covered.
 - Bullet points of what learners will achieve
 
 ## Core Concepts
-Detailed explanation with examples. Use **markdown tables** for comparisons and timelines — NEVER use ASCII art or text-based diagrams. Use clear formatting with headers, bold, and bullet lists.
+Detailed explanation with examples. Where it helps understanding, include a **markdown table** to show timelines, comparisons, or evolution of ideas. For example, a table with columns like | Era | Key Figures | Characteristics |. NEVER use ASCII art, box-drawing characters, or text-based diagrams — always use proper markdown tables instead. Use headers, bold, blockquotes, and bullet lists for structure.
 
 ## Code Example (if applicable)
 \`\`\`javascript
@@ -341,22 +341,19 @@ EXAMPLE (do not use this, pick REAL videos for the topic):
 Pick videos from well-known educational channels relevant to this subject area. These should be REAL videos you are confident exist.
 
 ## 🔗 Curated Resources
-Recommend 3-4 SPECIFIC pages (not homepages) from authoritative websites.
-Each link should go to a SPECIFIC article, tutorial, or page — NOT a homepage or search query.
+Provide 3-4 resource links using ONLY these safe URL patterns that are guaranteed to work:
 
-Format: [Page Title — Site Name](https://full-url-to-specific-page)
+1. **Wikipedia**: [Topic Name — Wikipedia](https://en.wikipedia.org/wiki/TOPIC_WITH_UNDERSCORES)
+2. **Google Scholar**: [Research on Topic — Google Scholar](https://scholar.google.com/scholar?q=URL+ENCODED+TOPIC)
+3. **YouTube Search**: [Topic tutorials — YouTube](https://www.youtube.com/results?search_query=URL+ENCODED+TOPIC)
 
-For programming: link to specific MDN docs, specific StackOverflow answers, specific GitHub repos, specific tutorials.
-For music: link to specific AllMusic pages, MusicTheory.net lessons, specific articles.
-For science: link to specific Khan Academy lessons, specific NASA pages, specific Wikipedia articles.
-For business: link to specific Investopedia articles, HBR pieces.
-For history: link to specific Britannica entries, History.com articles.
+Then add 1-2 links ONLY from these domains using their ACTUAL known URL patterns:
+- MDN: https://developer.mozilla.org/en-US/docs/...
+- Wikipedia: https://en.wikipedia.org/wiki/...
+- Khan Academy: https://www.khanacademy.org/...
+- Britannica: https://www.britannica.com/topic/...
 
-CRITICAL RULES:
-- Every URL must point to a SPECIFIC page, not a homepage or generic search
-- URL-encode special characters in URLs
-- Only recommend resources you are confident exist
-- DO NOT use programming-focused sites unless the course is about programming
+CRITICAL: Do NOT invent or guess URLs. If you are not 100% certain a URL exists, use a search query link instead (YouTube search, Google Scholar search). Never fabricate article URLs.
 
 Use rich Markdown formatting throughout — headers, bold, tables, bullet lists, blockquotes.`;
 
