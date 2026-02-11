@@ -173,5 +173,42 @@ export const database = {
         if (error) throw error;
         setCache(cacheKey, data);
         return data;
+    },
+
+    unenrollFromCourse: async (userId, courseId) => {
+        // Delete lesson progress for this course's lessons
+        const { data: modules } = await supabase
+            .from('modules')
+            .select('id, lessons(id)')
+            .eq('course_id', courseId);
+
+        if (modules) {
+            const lessonIds = modules.flatMap(m => (m.lessons || []).map(l => l.id));
+            if (lessonIds.length > 0) {
+                await supabase
+                    .from('lesson_progress')
+                    .delete()
+                    .eq('user_id', userId)
+                    .in('lesson_id', lessonIds);
+            }
+        }
+
+        // Delete enrollment
+        const { error } = await supabase
+            .from('enrollments')
+            .delete()
+            .eq('user_id', userId)
+            .eq('course_id', courseId);
+
+        if (error) throw error;
+
+        // Decrement enrolled count
+        await supabase.rpc('increment_enrollment_count', { course_id: courseId, amount: -1 }).catch(() => { });
+
+        // Clear caches
+        cache.delete(`enrollments_${userId}`);
+        cache.delete(`course_${courseId}`);
+
+        return true;
     }
 };

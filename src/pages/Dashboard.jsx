@@ -102,6 +102,18 @@ const Dashboard = () => {
         setShowChallengeViewer(true);
     };
 
+    const handleDeleteCourse = async (courseId) => {
+        try {
+            await database.unenrollFromCourse(user.id, courseId);
+            // Remove from local state immediately
+            setCurriculum(prev => prev.filter(c => c.id !== courseId));
+            // Refresh analytics
+            setStats(await curriculumService.getAnalytics(user.id));
+        } catch (error) {
+            console.error('Error deleting course:', error);
+        }
+    };
+
     const handleChallengeComplete = (feedback) => {
         const gamStats = gamificationService.getStats();
         setGamificationStats(gamStats);
@@ -306,6 +318,7 @@ const Dashboard = () => {
                                 curriculum={curriculum.filter(c =>
                                     c.title.toLowerCase().includes(searchTerm.toLowerCase())
                                 )}
+                                onDeleteCourse={handleDeleteCourse}
                             />
                         )}
                     </div>
