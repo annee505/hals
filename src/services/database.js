@@ -223,7 +223,7 @@ export const database = {
         }
 
         // Decrement enrolled count
-        await supabase.rpc('increment_enrollment_count', { course_id: courseId, amount: -1 }).catch(() => { });
+        try { await supabase.rpc('increment_enrollment_count', { course_id: courseId, amount: -1 }); } catch (e) { /* ignore */ }
 
         // Clear caches
         cache.delete(`enrollments_${userId}`);
