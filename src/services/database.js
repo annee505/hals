@@ -6,22 +6,31 @@ export const database = {
     findUserByEmail: async (email) => {
         console.log('[DB] findUserByEmail called for:', email);
         try {
-            const { data, error } = await supabase
+            // Create a timeout promise
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Database timeout')), 5000)
+            );
+
+            // Execute query
+            const queryPromise = supabase
                 .from('users')
                 .select('*')
                 .eq('email', email)
-                .maybeSingle(); // Use maybeSingle to avoid errors when no row found
+                .maybeSingle();
+
+            // Race them
+            const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
 
             console.log('[DB] findUserByEmail result:', { data, error });
 
             if (error) {
                 console.warn('Error fetching user by email:', error);
-                return null; // Return null instead of throwing
+                return null;
             }
             return data;
         } catch (err) {
             console.error('findUserByEmail exception:', err);
-            return null; // Return null on any error
+            return null; // Return null on any error (including timeout) to allow app to proceed
         }
     },
 

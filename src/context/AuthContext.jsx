@@ -61,16 +61,26 @@ export const AuthProvider = ({ children }) => {
             if (!mounted) return;
 
             if (session?.user) {
-                // If we already have a user and this is just a token refresh, 
-                // we might want to skip profile fetch to avoid flickering, 
-                // but for now safety first -> fetch it.
-                // Optimally we could check if event === 'SIGNED_IN' or 'USER_UPDATED'
-                const fullUser = await fetchProfile(session.user);
-                if (mounted) setUser(fullUser);
+                // OPTIMISTIC UPDATE:
+                // 1. Set the basic authenticated user IMMEDIATELY to unblock the UI
+                setUser(prev => {
+                    // Keep existing profile data if we have it, otherwise just use session data
+                    // This prevents flickering if we already loaded the profile
+                    return { ...session.user, ...prev };
+                });
+                setLoading(false);
+
+                // 2. Fetch full profile in the background
+                try {
+                    const fullUser = await fetchProfile(session.user);
+                    if (mounted) setUser(fullUser);
+                } catch (err) {
+                    console.error("Background profile fetch failed", err);
+                }
             } else {
                 if (mounted) setUser(null);
+                if (mounted) setLoading(false);
             }
-            if (mounted) setLoading(false);
         });
 
         return () => {
