@@ -2,8 +2,8 @@ import Groq from 'groq-sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { supabase } from './supabase-config';
 
-const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
-const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const groqApiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
+const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
 
 // Groq models to try
 const GROQ_MODELS = [
@@ -13,120 +13,144 @@ const GROQ_MODELS = [
     'llama3-70b-8192'
 ];
 
-// Generate local course when all APIs fail
+// Generate local course when all APIs fail — make titles topic-aware
 function generateLocalCourse(userGoal) {
+    const goal = userGoal.trim();
     return {
-        title: `Master ${userGoal}`,
-        description: `A comprehensive course designed to help you master ${userGoal}. This structured learning path covers fundamentals to advanced topics.`,
+        title: `${goal}`,
+        description: `A structured learning path to help you understand and master ${goal}. Covers foundations through advanced topics with curated resources and exercises.`,
         difficulty: "Beginner",
         duration: "6 weeks",
-        tags: [userGoal.split(' ')[0], "Learning", "Skills"],
+        tags: goal.split(' ').slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1)),
         modules: [
             {
-                title: "Getting Started",
-                description: `Introduction to ${userGoal}`,
+                title: `Foundations of ${goal}`,
+                description: `Core concepts and historical background of ${goal}`,
                 lessons: [
-                    { title: `What is ${userGoal}?`, duration: "15 min" },
-                    { title: "Setting Up", duration: "20 min" },
-                    { title: "Key Concepts", duration: "25 min" },
-                    { title: "First Project", duration: "30 min" }
+                    { title: `Introduction to ${goal}`, duration: "15 min" },
+                    { title: `History and Origins of ${goal}`, duration: "20 min" },
+                    { title: `Key Figures in ${goal}`, duration: "25 min" },
+                    { title: `Fundamental Principles of ${goal}`, duration: "30 min" }
                 ]
             },
             {
-                title: "Core Fundamentals",
-                description: `Deep dive into ${userGoal}`,
+                title: `Core Topics in ${goal}`,
+                description: `Deep exploration of major themes within ${goal}`,
                 lessons: [
-                    { title: "Understanding Basics", duration: "25 min" },
-                    { title: "Common Patterns", duration: "30 min" },
-                    { title: "Best Practices", duration: "25 min" },
-                    { title: "Exercises", duration: "40 min" }
+                    { title: `Major Movements and Developments in ${goal}`, duration: "25 min" },
+                    { title: `Cultural and Social Impact of ${goal}`, duration: "30 min" },
+                    { title: `Influential Works and Milestones in ${goal}`, duration: "25 min" },
+                    { title: `Debates and Perspectives on ${goal}`, duration: "30 min" }
                 ]
             },
             {
-                title: "Intermediate",
-                description: `Building ${userGoal} skills`,
+                title: `${goal} in Practice`,
+                description: `Applied understanding and real-world connections`,
                 lessons: [
-                    { title: "Advanced Concepts", duration: "30 min" },
-                    { title: "Problem Solving", duration: "35 min" },
-                    { title: "Real Applications", duration: "30 min" },
-                    { title: "Case Study", duration: "45 min" }
+                    { title: `${goal} in the Modern World`, duration: "30 min" },
+                    { title: `Case Studies in ${goal}`, duration: "35 min" },
+                    { title: `Comparative Analysis: ${goal} Across Regions`, duration: "30 min" },
+                    { title: `Research Methods for ${goal}`, duration: "30 min" }
                 ]
             },
             {
-                title: "Mastery",
-                description: `Becoming proficient`,
+                title: `Advanced ${goal}`,
+                description: `Deeper analysis and independent exploration`,
                 lessons: [
-                    { title: "Project Planning", duration: "20 min" },
-                    { title: "Building Project", duration: "60 min" },
-                    { title: "Optimization", duration: "30 min" },
-                    { title: "Next Steps", duration: "15 min" }
+                    { title: `Advanced Topics in ${goal}`, duration: "30 min" },
+                    { title: `Critical Analysis of ${goal}`, duration: "35 min" },
+                    { title: `Future Directions in ${goal}`, duration: "25 min" },
+                    { title: `Capstone: Your ${goal} Journey`, duration: "40 min" }
                 ]
             }
         ]
     };
 }
 
-// Generate rich lesson content locally
+// Generate lesson content locally — provide real structure with resource links
 function generateLocalLessonContent(lessonTitle, moduleName, courseName) {
     const encodedTitle = encodeURIComponent(lessonTitle);
     const encodedCourse = encodeURIComponent(courseName);
+    const wikiTitle = lessonTitle.replace(/\s+/g, '_');
+    const wikiCourse = courseName.replace(/\s+/g, '_');
     return `## ${lessonTitle}
 
-Welcome to **${lessonTitle}**! Part of "${moduleName}" in "${courseName}".
+This lesson is part of **${moduleName}** in the course **${courseName}**.
 
-### 📚 Introduction
-In this lesson, we dive into **${lessonTitle}** — a key topic within ${moduleName}. Understanding this subject will give you practical knowledge and a deeper appreciation for ${courseName}.
+---
 
 ### 🎯 Learning Objectives
-- Understand the history and significance of ${lessonTitle}
-- Identify key figures, events, and milestones related to this topic
-- Analyze how ${lessonTitle} connects to the broader themes of ${courseName}
-- Apply your understanding through reflection and further exploration
+- Explore the key aspects of **${lessonTitle}** and its significance within ${courseName}
+- Understand the historical context, major developments, and influential figures related to this topic
+- Build connections between this topic and the broader themes of the course
 
-### 📖 Core Concepts
+---
 
-This topic explores several important dimensions:
+### 📖 Getting Started
 
-- **Historical Context** — Every subject has a story. Understanding where ${lessonTitle} fits in the timeline helps you see the bigger picture.
-- **Key Figures & Contributions** — Learn about the people who shaped this area and their lasting impact.
-- **Evolution & Impact** — See how ideas, techniques, and movements developed over time and influenced what came after.
+To build a strong foundation for this topic, start with these authoritative sources:
 
-> 💡 *Take a moment to think about what you already know about this subject before reading further. Connecting new knowledge to existing understanding strengthens retention.*
+| Resource | Description |
+|----------|-------------|
+| [${lessonTitle} — Wikipedia](https://en.wikipedia.org/wiki/${wikiTitle}) | Overview and historical context |
+| [${courseName} — Wikipedia](https://en.wikipedia.org/wiki/${wikiCourse}) | Broader course context |
+| [${lessonTitle} — Britannica](https://www.britannica.com/search?query=${encodedTitle}) | In-depth encyclopedia article |
 
-### ✅ Key Takeaways
-- ${lessonTitle} plays an important role in ${courseName}
-- Understanding the context and key figures deepens your knowledge
-- This topic connects to broader themes you will explore in other lessons
-- Continue exploring through the resources below
+---
 
-### 📺 Recommended Videos
-- [${lessonTitle} — Full Overview](https://www.youtube.com/results?search_query=${encodedTitle}+overview)
-- [${courseName} — Documentary](https://www.youtube.com/results?search_query=${encodedCourse}+documentary)
+### 📺 Video Resources
 
-### 🔗 Curated Resources
-- [${lessonTitle} — Wikipedia](https://en.wikipedia.org/wiki/${encodedTitle.replace(/%20/g, '_')})
-- [${courseName} — Google Scholar](https://scholar.google.com/scholar?q=${encodedCourse})
-- [Explore ${lessonTitle} — YouTube](https://www.youtube.com/results?search_query=${encodedTitle})`;
+Watch these to deepen your understanding:
+
+- [${lessonTitle} — Documentary](https://www.youtube.com/results?search_query=${encodedTitle}+documentary)
+- [${lessonTitle} — Explained](https://www.youtube.com/results?search_query=${encodedTitle}+explained)
+- [${courseName} — Full Course](https://www.youtube.com/results?search_query=${encodedCourse}+full+course)
+
+---
+
+### 🔍 Research & Further Reading
+
+- [Academic papers on ${lessonTitle}](https://scholar.google.com/scholar?q=${encodedTitle})
+- [${courseName} research](https://scholar.google.com/scholar?q=${encodedCourse})
+
+---
+
+### ✅ Study Activities
+
+1. **Read** the Wikipedia article on ${lessonTitle} and note 3 key facts you learned
+2. **Watch** at least one video from the recommended list above
+3. **Reflect**: How does ${lessonTitle} connect to what you already know about ${courseName}?
+4. **Research**: Find one additional source about this topic and summarize it in your notes
+
+> 💡 *Use the Notes feature (📝 button in the header) to save your thoughts and key takeaways as you study.*`;
 }
 
 // Try to generate with Gemini
 async function tryGemini(prompt) {
-    if (!geminiApiKey) return null;
+    if (!geminiApiKey) {
+        console.warn('Gemini: no API key configured');
+        return null;
+    }
 
     try {
         const genAI = new GoogleGenerativeAI(geminiApiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContent(prompt);
-        return result.response.text();
+        const text = result.response.text();
+        console.log('Gemini: success, got', text.length, 'chars');
+        return text;
     } catch (error) {
-        console.warn('Gemini failed:', error.message);
+        console.error('Gemini FAILED:', error.message, error);
         return null;
     }
 }
 
 // Try to generate with Groq
 async function tryGroq(prompt, jsonMode = false) {
-    if (!groqApiKey) return null;
+    if (!groqApiKey) {
+        console.warn('Groq: no API key configured');
+        return null;
+    }
 
     const groq = new Groq({ apiKey: groqApiKey, dangerouslyAllowBrowser: true });
 
@@ -141,11 +165,14 @@ async function tryGroq(prompt, jsonMode = false) {
                 options.response_format = { type: "json_object" };
             }
             const completion = await groq.chat.completions.create(options);
-            return completion.choices[0]?.message?.content;
+            const text = completion.choices[0]?.message?.content;
+            console.log(`Groq ${model}: success, got ${text?.length || 0} chars`);
+            return text;
         } catch (error) {
-            console.warn(`Groq ${model} failed:`, error.message);
+            console.error(`Groq ${model} FAILED:`, error.message);
         }
     }
+    console.error('Groq: ALL models failed');
     return null;
 }
 
@@ -360,6 +387,7 @@ Use rich Markdown formatting throughout — headers, bold, tables, bullet lists,
                         content = await tryGemini(contentPrompt);
                     }
                     if (!content) {
+                        console.warn(`AI content generation failed for lesson "${lesson.title}" — using resource-based fallback`);
                         content = generateLocalLessonContent(lesson.title, mod.title, courseData.title);
                     }
 
