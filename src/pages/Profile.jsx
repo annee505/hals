@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authService } from '../services/auth';
 import { useAuth } from '../context/AuthContext';
-import { database } from '../services/database';
+import { database, clearEnrollmentCache } from '../services/database';
+import { courseContentService } from '../services/courseContent';
 import ThemeToggle from '../components/ThemeToggle';
 import { Edit, BookOpen, Award, Target, Zap, Layers } from 'lucide-react';
 
@@ -30,9 +31,29 @@ const Profile = () => {
 
         const loadData = async () => {
             try {
-                // Get user enrollments
+                // Force fresh data — clear cache first
+                clearEnrollmentCache(user.id);
                 const userEnrollments = await database.getUserEnrollments(user.id);
-                setEnrollments(userEnrollments);
+
+                // Compute real progress for each enrollment from lesson_progress table
+                // (enrollment.progress column may be stale due to RLS blocking UPDATEs)
+                const enriched = await Promise.all(
+                    (userEnrollments || []).map(async (enrollment) => {
+                        if (!enrollment.course) return enrollment;
+                        try {
+                            const content = await courseContentService.getCourseContent(enrollment.course_id);
+                            const progressData = await courseContentService.getProgress(user.id, enrollment.course_id);
+                            const totalLessons = content.modules?.reduce((sum, m) => sum + (m.lessons?.length || 0), 0) || 0;
+                            const completedCount = progressData.completedLessons?.length || 0;
+                            const computedProgress = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+                            return { ...enrollment, progress: computedProgress };
+                        } catch {
+                            return enrollment;
+                        }
+                    })
+                );
+
+                setEnrollments(enriched);
             } catch (error) {
                 console.error("Error loading enrollments:", error);
             }

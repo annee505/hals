@@ -36,6 +36,7 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [streakData, setStreakData] = useState(null);
+    const [deleteError, setDeleteError] = useState(null);
 
     // AI Generation State
     const [showGenerator, setShowGenerator] = useState(false);
@@ -65,7 +66,7 @@ const Dashboard = () => {
 
                 if (enrollments && enrollments.length > 0) {
                     const newCurriculum = enrollments
-                        .filter(enrollment => enrollment && enrollment.course) // Filter out invalid enrollments
+                        .filter(enrollment => enrollment && enrollment.course)
                         .map(enrollment => ({
                             id: enrollment.course.id,
                             title: enrollment.course.title,
@@ -73,7 +74,7 @@ const Dashboard = () => {
                                 {
                                     id: `mod-${enrollment.course.id}`,
                                     title: 'Continue Learning',
-                                    status: (enrollment.progress || 0) > 0 ? 'in-progress' : 'in-progress'
+                                    status: (enrollment.progress || 0) >= 100 ? 'completed' : 'in-progress'
                                 }
                             ]
                         }));
@@ -109,14 +110,18 @@ const Dashboard = () => {
     };
 
     const handleDeleteCourse = async (courseId) => {
+        setDeleteError(null);
         try {
             await database.unenrollFromCourse(user.id, courseId);
-            // Remove from local state immediately
+            // Remove from local state
             setCurriculum(prev => prev.filter(c => c.id !== courseId));
             // Refresh analytics
             setStats(await curriculumService.getAnalytics(user.id));
         } catch (error) {
             console.error('Error deleting course:', error);
+            setDeleteError(error.message || 'Failed to remove course. Please try again.');
+            // Auto-clear after 5 seconds
+            setTimeout(() => setDeleteError(null), 5000);
         }
     };
 
@@ -320,12 +325,19 @@ const Dashboard = () => {
                                 ))}
                             </div>
                         ) : (
-                            <CurriculumView
-                                curriculum={curriculum.filter(c =>
-                                    c.title.toLowerCase().includes(searchTerm.toLowerCase())
+                            <>
+                                {deleteError && (
+                                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm mb-4">
+                                        {deleteError}
+                                    </div>
                                 )}
-                                onDeleteCourse={handleDeleteCourse}
-                            />
+                                <CurriculumView
+                                    curriculum={curriculum.filter(c =>
+                                        c.title.toLowerCase().includes(searchTerm.toLowerCase())
+                                    )}
+                                    onDeleteCourse={handleDeleteCourse}
+                                />
+                            </>
                         )}
                     </div>
 

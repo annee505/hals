@@ -181,6 +181,8 @@ export const database = {
     },
 
     unenrollFromCourse: async (userId, courseId) => {
+        console.log('Unenrolling:', { userId, courseId });
+
         // Delete lesson progress for this course's lessons
         const { data: modules } = await supabase
             .from('modules')
@@ -190,11 +192,12 @@ export const database = {
         if (modules) {
             const lessonIds = modules.flatMap(m => (m.lessons || []).map(l => l.id));
             if (lessonIds.length > 0) {
-                await supabase
+                const { error: progressError } = await supabase
                     .from('lesson_progress')
                     .delete()
                     .eq('user_id', userId)
                     .in('lesson_id', lessonIds);
+                if (progressError) console.warn('Error deleting lesson progress:', progressError);
             }
         }
 
@@ -206,6 +209,18 @@ export const database = {
             .eq('course_id', courseId);
 
         if (error) throw error;
+
+        // Verify the delete actually worked (RLS can silently block it)
+        const { data: stillExists } = await supabase
+            .from('enrollments')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('course_id', courseId)
+            .maybeSingle();
+
+        if (stillExists) {
+            throw new Error('Unable to remove course — please check your database permissions (RLS policies)');
+        }
 
         // Decrement enrolled count
         await supabase.rpc('increment_enrollment_count', { course_id: courseId, amount: -1 }).catch(() => { });
