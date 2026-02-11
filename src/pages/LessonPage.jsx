@@ -52,6 +52,7 @@ const LessonPage = () => {
                 let foundModule = null;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                 if (courseContent && courseContent.modules) {
                     for (const mod of courseContent.modules) {
                         const lesson = mod.lessons?.find(l => l.id.toString() === lessonId || l.id === lessonId);
@@ -61,6 +62,8 @@ const LessonPage = () => {
                             break;
                         }
 =======
+=======
+>>>>>>> 4a95198 (fix(LessonPage): prevent crash on missing course data)
                 for (const mod of courseContent.modules) {
                     if (!mod.lessons) continue; // Skip if no lessons in module
 
@@ -69,7 +72,10 @@ const LessonPage = () => {
                         foundLesson = lesson;
                         foundModule = mod;
                         break;
+<<<<<<< HEAD
 >>>>>>> 2447d69 (fix(LessonPage): prevent crash on missing course data)
+=======
+>>>>>>> 4a95198 (fix(LessonPage): prevent crash on missing course data)
                     }
                 }
 
@@ -92,7 +98,56 @@ const LessonPage = () => {
         loadLessonData();
     }, [courseId, lessonId, user]);
 
-    // ... helper handlers ...
+    const handleComplete = async () => {
+        if (!user || !currentLesson) return;
+
+        // Optimistic update
+        const alreadyCompleted = progress?.completedLessons?.includes(currentLesson.id);
+        if (alreadyCompleted) return; // Already done
+
+        try {
+            await courseContentService.markLessonComplete(user.id, courseId, currentLesson.id);
+
+            // Refresh progress
+            const newProgress = await courseContentService.getProgress(user.id, courseId);
+            setProgress(newProgress);
+
+            // Gamification
+            gamificationService.addXP(10);
+        } catch (error) {
+            console.error("Error marking complete:", error);
+        }
+    };
+
+    const handleNext = () => {
+        // Logic to find next lesson
+        if (!content || !currentLesson) return;
+
+        let allLessons = [];
+        content.modules.forEach(m => allLessons.push(...m.lessons));
+
+        const currentIndex = allLessons.findIndex(l => l.id === currentLesson.id);
+        if (currentIndex < allLessons.length - 1) {
+            const nextLesson = allLessons[currentIndex + 1];
+            navigate(`/course/${courseId}/lesson/${nextLesson.id}`);
+        } else {
+            // Course Complete!
+            navigate(`/course/${courseId}`, { state: { courseCompleted: true } });
+        }
+    };
+
+    const handlePrev = () => {
+        if (!content || !currentLesson) return;
+
+        let allLessons = [];
+        content.modules.forEach(m => allLessons.push(...m.lessons));
+
+        const currentIndex = allLessons.findIndex(l => l.id === currentLesson.id);
+        if (currentIndex > 0) {
+            const prevLesson = allLessons[currentIndex - 1];
+            navigate(`/course/${courseId}/lesson/${prevLesson.id}`);
+        }
+    };
 
     if (loading) {
         return (
@@ -116,10 +171,14 @@ const LessonPage = () => {
 
     if (!currentLesson) return null;
 
+<<<<<<< HEAD
     const isCompleted = progress?.completedLessons.includes(currentLesson.id);
 =======
     const isCompleted = progress?.completedLessons?.includes(currentLesson.id) || false;
 >>>>>>> 2447d69 (fix(LessonPage): prevent crash on missing course data)
+=======
+    const isCompleted = progress?.completedLessons?.includes(currentLesson.id) || false;
+>>>>>>> 4a95198 (fix(LessonPage): prevent crash on missing course data)
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors">
