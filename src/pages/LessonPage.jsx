@@ -5,8 +5,10 @@ import { useAuth } from '../context/AuthContext';
 import { database } from '../services/database';
 import { courseContentService } from '../services/courseContent';
 import { gamificationService } from '../services/gamification';
-import { ArrowLeft, CheckCircle, Circle, ChevronRight, ChevronLeft, BookOpen, Loader2 } from 'lucide-react';
+import { notesService } from '../services/notesService';
+import { ArrowLeft, CheckCircle, Circle, ChevronRight, ChevronLeft, BookOpen, Loader2, StickyNote } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
+import NotesPanel from '../components/NotesPanel';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
@@ -23,6 +25,8 @@ const LessonPage = () => {
     const [progress, setProgress] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showNotes, setShowNotes] = useState(false);
+    const [noteCount, setNoteCount] = useState(0);
 
     useEffect(() => {
         const loadLessonData = async () => {
@@ -81,6 +85,11 @@ const LessonPage = () => {
         };
 
         loadLessonData();
+
+        // Load note count for badge
+        if (user && courseId && lessonId) {
+            setNoteCount(notesService.getNotesForLesson(user.id, courseId, lessonId).length);
+        }
     }, [courseId, lessonId, user]);
 
     const handleComplete = async () => {
@@ -179,6 +188,18 @@ const LessonPage = () => {
                         <span className="text-sm font-medium text-gray-500 dark:text-gray-400 hidden sm:inline">
                             {currentModule?.title}
                         </span>
+                        <button
+                            onClick={() => setShowNotes(!showNotes)}
+                            className="relative flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-white bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        >
+                            <StickyNote className="w-4 h-4" />
+                            <span className="hidden sm:inline">Notes</span>
+                            {noteCount > 0 && (
+                                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-yellow-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                    {noteCount}
+                                </span>
+                            )}
+                        </button>
                         <ThemeToggle />
                     </div>
                 </div>
@@ -289,6 +310,20 @@ const LessonPage = () => {
                     </div>
                 </motion.div>
             </main>
+
+            {/* Notes Panel */}
+            <NotesPanel
+                userId={user?.id}
+                courseId={courseId}
+                lessonId={lessonId}
+                isOpen={showNotes}
+                onClose={() => {
+                    setShowNotes(false);
+                    // Refresh note count badge
+                    if (user) setNoteCount(notesService.getNotesForLesson(user.id, courseId, lessonId).length);
+                }}
+                lessonTitle={currentLesson?.title}
+            />
         </div>
     );
 };
