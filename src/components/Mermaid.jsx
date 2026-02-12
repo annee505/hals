@@ -80,6 +80,10 @@ function sanitizeChart(raw) {
     const arrowRegex = /(\s+)([^"\[\]\(\)\n]+?)(\s*[-=.]+(?:>|\|))/gm;
     body = body.replace(arrowRegex, (match, pre, nodeId, arrow) => {
         // Only sanitize if it truly looks like an ID (no quotes/brackets in match)
+        // AND it's not just a piece of an arrow (like "-" from "-->")
+        if (/^[-=.]+$/.test(nodeId)) {
+            return match;
+        }
         return pre + nodeId.replace(/[\s\+\-]+/g, '_') + arrow;
     });
 
