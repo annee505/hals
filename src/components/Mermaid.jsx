@@ -90,9 +90,13 @@ const Mermaid = ({ chart }) => {
         // Create a temporary container for mermaid to render into (required for layout calculation)
         const tempContainer = document.createElement('div');
         tempContainer.id = uniqueId;
-        tempContainer.style.visibility = 'hidden';
+        // Use opacity 0 instead of visibility:hidden because getBBox() sometimes fails on hidden elements
+        tempContainer.style.opacity = '0';
+        tempContainer.style.overflow = 'hidden';
+        tempContainer.style.pointerEvents = 'none';
         tempContainer.style.position = 'absolute';
-        tempContainer.style.width = '100%'; // simulate width
+        tempContainer.style.width = '800px'; // explicit width for layout
+        tempContainer.style.height = '600px';
         document.body.appendChild(tempContainer);
 
         try {
@@ -100,13 +104,13 @@ const Mermaid = ({ chart }) => {
             const { svg } = await mermaid.render(uniqueId, sanitized, tempContainer);
             if (svg && svg.length > 50) {
                 setSvgContent(svg);
-                setError(false);
+                setError(null);
             } else {
                 throw new Error('Empty SVG output');
             }
         } catch (err) {
             console.error('Mermaid render failed:', err);
-            setError(true);
+            setError(err.message || 'Unknown error');
             setSvgContent(null);
         } finally {
             // Cleanup temp container
@@ -123,12 +127,16 @@ const Mermaid = ({ chart }) => {
     if (error) {
         return (
             <details className="my-6 bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden">
-                <summary className="px-4 py-3 text-sm text-gray-400 cursor-pointer hover:text-gray-300 select-none">
-                    📊 Diagram could not render (click to view source)
+                <summary className="px-4 py-3 text-sm text-gray-400 cursor-pointer hover:text-gray-300 select-none flex justify-between">
+                    <span>📊 Diagram error (click to view source)</span>
+                    <span className="text-red-400 text-xs font-mono">{String(error).slice(0, 50)}...</span>
                 </summary>
-                <pre className="px-4 py-3 text-xs text-gray-500 overflow-x-auto whitespace-pre-wrap border-t border-gray-700/50">
-                    {chart}
-                </pre>
+                <div className="p-4 border-t border-gray-700/50">
+                    <p className="text-red-400 text-xs font-mono mb-2 whitespace-pre-wrap">{String(error)}</p>
+                    <pre className="text-xs text-gray-500 overflow-x-auto whitespace-pre-wrap">
+                        {chart}
+                    </pre>
+                </div>
             </details>
         );
     }

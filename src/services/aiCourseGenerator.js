@@ -166,7 +166,7 @@ export async function tryOpenRouter(prompt, jsonMode = false) {
                 headers: {
                     'Authorization': `Bearer ${openRouterApiKey}`,
                     'Content-Type': 'application/json',
-                    'HTTP-Referer': 'https://hals-platform.vercel.app',
+                    'HTTP-Referer': 'https://hals-platform-main.vercel.app',
                     'X-Title': 'HALS Learning Platform'
                 },
                 body: JSON.stringify({
