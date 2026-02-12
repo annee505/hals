@@ -9,8 +9,8 @@ const openRouterApiKey = import.meta.env.VITE_OPENROUTER_API_KEY?.trim();
 // Groq models to try
 const GROQ_MODELS = [
     'llama-3.3-70b-versatile',
-    'llama-3.1-70b-versatile',
-    'llama-3.1-8b-instant'
+    'llama-3.1-8b-instant',
+    'gemma2-9b-it'
 ];
 
 // Generate local course when all APIs fail — make titles topic-aware

@@ -1,14 +1,15 @@
 import Groq from 'groq-sdk';
 import { searchKnowledge, formatKnowledgeContext } from '../data/knowledgeBase';
 import { aiKnowledgeService } from './aiKnowledge';
+import { tryOpenRouter } from './aiCourseGenerator';
 
 const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
 
-// Models to try in order of preference
+// Models to try in order of preference (keep in sync with aiCourseGenerator.js)
 const MODELS = [
     'llama-3.3-70b-versatile',
-    'llama-3.1-70b-versatile',
-    'mixtral-8x7b-32768'
+    'llama-3.1-8b-instant',
+    'gemma2-9b-it'
 ];
 
 // Mentor prompt template with RAG context
@@ -129,7 +130,12 @@ export const aiMentor = {
             }
         }
 
-        // All models failed
+        // All Groq models failed — try OpenRouter as fallback
+        console.warn('AI Mentor: All Groq models failed, trying OpenRouter...');
+        const orResponse = await tryOpenRouter(prompt);
+        if (orResponse) return orResponse;
+
+        // All providers failed
         throw new Error('AI mentor is currently unavailable. Please try again later.');
     },
 
