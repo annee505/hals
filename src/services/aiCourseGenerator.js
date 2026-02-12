@@ -4,6 +4,7 @@ import { supabase } from './supabase-config';
 
 const groqApiKey = import.meta.env.VITE_GROQ_API_KEY?.trim();
 const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY?.trim();
+const openRouterApiKey = import.meta.env.VITE_OPENROUTER_API_KEY?.trim();
 
 // Groq models to try
 const GROQ_MODELS = [
@@ -142,6 +143,59 @@ async function tryGemini(prompt) {
         console.error('Gemini FAILED:', error.message, error);
         return null;
     }
+}
+
+// Try to generate with OpenRouter (free tier models)
+const OPENROUTER_MODELS = [
+    'meta-llama/llama-4-maverick:free',
+    'google/gemma-3-27b-it:free',
+    'mistralai/mistral-small-3.1-24b-instruct:free',
+    'nvidia/llama-3.1-nemotron-nano-8b-v1:free'
+];
+
+export async function tryOpenRouter(prompt, jsonMode = false) {
+    if (!openRouterApiKey) {
+        console.warn('OpenRouter: no API key configured');
+        return null;
+    }
+
+    for (const model of OPENROUTER_MODELS) {
+        try {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${openRouterApiKey}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': 'https://hals-platform.vercel.app',
+                    'X-Title': 'HALS Learning Platform'
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [{ role: 'user', content: prompt }],
+                    ...(jsonMode && { response_format: { type: 'json_object' } })
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                console.warn(`OpenRouter ${model} failed: ${data.error?.message || response.statusText} (${response.status})`);
+                continue;
+            }
+
+            const text = data.choices?.[0]?.message?.content;
+            if (text) {
+                console.log(`OpenRouter ${model}: success, got ${text.length} chars`);
+                return text;
+            }
+        } catch (error) {
+            console.error(`OpenRouter ${model} FAILED:`, error.message);
+            continue;
+        }
+    }
+
+    console.error('OpenRouter: ALL models failed');
+    return null;
 }
 
 // Helper for delay
@@ -301,13 +355,19 @@ RESPOND ONLY WITH JSON:
   "modules": [{"title": "Module", "description": "Desc", "lessons": [{"title": "Lesson", "duration": "15 min"}]}]
 }`;
 
-            // Try Groq first, then Gemini, then local
+            // Try Groq first, then Gemini, then OpenRouter, then local
             let courseData = null;
             let responseText = await tryGroq(outlinePrompt, true);
 
             if (!responseText) {
                 console.log('Groq failed, trying Gemini...');
                 responseText = await tryGemini(outlinePrompt + "\nRespond ONLY with valid JSON, no markdown.");
+            }
+
+            if (!responseText) {
+                console.log('Gemini failed, trying OpenRouter...');
+                report('🔄 Trying backup AI provider...');
+                responseText = await tryOpenRouter(outlinePrompt + "\nRespond ONLY with valid JSON, no markdown.", true);
             }
 
             if (responseText) {
@@ -436,6 +496,9 @@ Use rich Markdown formatting throughout — headers, bold, tables, bullet lists,
                     let content = await tryGroq(contentPrompt);
                     if (!content) {
                         content = await tryGemini(contentPrompt);
+                    }
+                    if (!content) {
+                        content = await tryOpenRouter(contentPrompt);
                     }
                     if (!content) {
                         console.warn(`AI content generation failed for lesson "${lesson.title}" — using resource-based fallback`);

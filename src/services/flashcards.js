@@ -28,9 +28,7 @@ function saveDeckToCache(courseId, deck) {
     } catch (e) { /* ignore */ }
 }
 
-import { tryGroq } from './aiCourseGenerator';
-
-// ... existing code ...
+import { tryGroq, tryOpenRouter } from './aiCourseGenerator';
 
 // Generate flashcards from lesson content using AI
 async function generateFlashcardsFromContent(courseTitle, lessonContents) {
@@ -48,13 +46,14 @@ Return ONLY a valid JSON array of objects with "front" (question) and "back" (an
 Example format:
 [{"front": "What is X?", "back": "X is..."}]`;
 
+    // Try Groq first, then OpenRouter as fallback
+    let text = await tryGroq(prompt, false);
+    if (!text) {
+        text = await tryOpenRouter(prompt, false);
+    }
+    if (!text) return null;
+
     try {
-        // Use the robust tryGroq function which handles retries and rate limits
-        // We use jsonMode=false because we want an Array, and json_object mode requires a root Object
-        const text = await tryGroq(prompt, false);
-
-        if (!text) return null;
-
         // Extract JSON array from response
         const jsonMatch = text.match(/\[[\s\S]*\]/);
         if (jsonMatch) {
