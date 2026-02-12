@@ -90,6 +90,21 @@ function sanitizeChart(raw) {
         return arrow + nodeId.replace(/[\s\+\-]+/g, '_') + end;
     });
 
+    // Fix lines where nodes with labels and the arrow are all on one line,
+    // which some Mermaid versions can be picky about, e.g.:
+    //   Start["Starting Point"] --> Step1["Plot the intercept (b)"]
+    // We rewrite this into:
+    //   Start["Starting Point"]
+    //   Step1["Plot the intercept (b)"]
+    //   Start --> Step1
+    const inlineNodeWithLabel = /^(\s*)([A-Za-z0-9_]+)\s*(\[[^\]]+\])\s*([-=.]+>)\s*([A-Za-z0-9_]+)\s*(\[[^\]]+\])\s*$/gm;
+    body = body.replace(inlineNodeWithLabel, (match, indent, id1, label1, arrow, id2, label2) => {
+        const line1 = `${indent}${id1}${label1}`;
+        const line2 = `${indent}${id2}${label2}`;
+        const line3 = `${indent}${id1} ${arrow} ${id2}`;
+        return `${line1}\n${line2}\n${line3}`;
+    });
+
     chart = firstLine + '\n' + body;
 
     return chart.trim();
