@@ -429,15 +429,17 @@ const CourseDetail = () => {
                                     <p className="font-semibold text-gray-900 dark:text-white">Bookmarked Lessons</p>
                                 </div>
                                 <div className="space-y-1">
-                                    {bookmarkService.getBookmarksForCourse(user.id, courseId).map(bm => (
-                                        <button
-                                            key={bm.lessonId}
-                                            onClick={() => navigate(`/course/${courseId}/lesson/${bm.lessonId}`)}
-                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors truncate"
-                                        >
-                                            📌 {bm.lessonTitle || 'Untitled Lesson'}
-                                        </button>
-                                    ))}
+                                    {content?.modules?.flatMap(m => m.lessons || [])
+                                        .filter(l => bookmarks[l.id])
+                                        .map(l => (
+                                            <button
+                                                key={l.id}
+                                                onClick={() => navigate(`/course/${courseId}/lesson/${l.id}`)}
+                                                className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors truncate"
+                                            >
+                                                📌 {l.title || 'Untitled Lesson'}
+                                            </button>
+                                        ))}
                                 </div>
                             </div>
                         )}

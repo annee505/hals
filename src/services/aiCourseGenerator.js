@@ -201,8 +201,19 @@ export async function tryOpenRouter(prompt, jsonMode = false) {
 // Helper for delay
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-// Keep track of models that have hit rate limits in this session
-const deadModels = new Set();
+// Keep track of models that have hit rate limits (with TTL)
+const deadModels = new Map(); // model -> timestamp
+const DEAD_MODEL_TTL = 5 * 60 * 1000; // 5 minutes
+
+function isModelDead(model) {
+    const ts = deadModels.get(model);
+    if (!ts) return false;
+    if (Date.now() - ts > DEAD_MODEL_TTL) {
+        deadModels.delete(model);
+        return false;
+    }
+    return true;
+}
 
 export async function tryGroq(prompt, jsonMode = false) {
     if (!groqApiKey) {
@@ -239,7 +250,7 @@ export async function tryGroq(prompt, jsonMode = false) {
                     } else {
                         // After retries exhausted, mark as dead for this session
                         console.error(`Groq ${model} Rate Limit Exceeded. Marking as dead for this session.`);
-                        deadModels.add(model);
+                        deadModels.set(model, Date.now());
                     }
                 }
                 throw new Error(`${data.error?.message || response.statusText} (${response.status})`);
@@ -254,7 +265,7 @@ export async function tryGroq(prompt, jsonMode = false) {
     };
 
     for (const model of GROQ_MODELS) {
-        if (deadModels.has(model)) {
+        if (isModelDead(model)) {
             // console.warn(`Skipping dead model: ${model}`); // verbose
             continue;
         }
