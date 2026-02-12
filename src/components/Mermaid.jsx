@@ -109,6 +109,15 @@ function sanitizeChart(raw) {
         return `${line1}\n${line2}\n${line3}`;
     });
 
+    // Fix nested brackets in labels (e.g. Shape[A["2D Triangle"]])
+    // This looks for ID[...[...]...] pattern and quotes the content
+    const nestedBracketRegex = /(\w+)\s*\[([^\]\n]*\[[^\]\n]*\][^\]\n]*)\]/gm;
+    body = body.replace(nestedBracketRegex, (match, id, content) => {
+        // Quote the content and replace double quotes with single quotes inside
+        const safeContent = content.replace(/"/g, "'");
+        return `${id}["${safeContent}"]`;
+    });
+
     chart = firstLine + '\n' + body;
 
     return chart.trim();
