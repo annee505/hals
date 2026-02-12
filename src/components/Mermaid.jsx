@@ -30,9 +30,11 @@ function sanitizeChart(raw) {
         // Wrap in a default flowchart if no valid diagram type
         chart = `graph TD\n${chart}`;
     }
-
-    // Replace problematic round-bracket nodes: A(Label) -> A["Label"]
-    chart = chart.replace(/(\w+)\(([^)]+)\)/g, '$1["$2"]');
+    // Fix common AI arrow mistakes:
+    // -->|label|> should be -->|label| (stray > after pipe)
+    chart = chart.replace(/\|>\s/g, '| ');
+    // Remove trailing semicolons (valid in some contexts but causes issues)
+    chart = chart.replace(/;\s*$/gm, '');
 
     return chart.trim();
 }

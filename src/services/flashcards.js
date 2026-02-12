@@ -1,9 +1,8 @@
 import { supabase } from './supabase-config';
-
+import { tryGroq, tryOpenRouter } from './aiCourseGenerator';
 
 const FLASHCARD_KEY = 'hals_flashcards';
 const FLASHCARD_DECK_KEY = 'hals_flashcard_decks';
-const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
 
 // Cache generated decks in localStorage so we don't regenerate every time
 function getCachedDeck(courseId) {
@@ -28,7 +27,6 @@ function saveDeckToCache(courseId, deck) {
     } catch (e) { /* ignore */ }
 }
 
-import { tryGroq, tryOpenRouter } from './aiCourseGenerator';
 
 // Generate flashcards from lesson content using AI
 async function generateFlashcardsFromContent(courseTitle, lessonContents) {

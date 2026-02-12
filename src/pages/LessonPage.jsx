@@ -284,9 +284,14 @@ const LessonPage = () => {
                                             </code>
                                         );
                                     },
-                                    pre: ({ node, ...props }) => (
-                                        <pre {...props} className="bg-transparent p-0 m-0 border-0 shadow-none" />
-                                    ),
+                                    pre: ({ node, children, ...props }) => {
+                                        // If the child is a Mermaid diagram, render without pre styling
+                                        const child = Array.isArray(children) ? children[0] : children;
+                                        if (child?.type === Mermaid) {
+                                            return <>{children}</>;
+                                        }
+                                        return <pre {...props} className="!bg-gray-900 rounded-xl shadow-lg border border-gray-700 overflow-x-auto" />;
+                                    },
                                 }}
                             >
                                 {currentLesson.content}
