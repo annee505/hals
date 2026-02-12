@@ -41,6 +41,19 @@ function sanitizeChart(raw) {
     // Remove trailing semicolons
     chart = chart.replace(/;\s*$/gm, '');
 
+    // Fix spaces in node IDs before brackets: Blues Style["label"] -> Blues_Style["label"]
+    chart = chart.replace(/^(\s*)(\w+(?:\s+\w+)+)(\s*[\[\(\{])/gm, (match, indent, nodeId, bracket) => {
+        return indent + nodeId.replace(/\s+/g, '_') + bracket;
+    });
+
+    // Fix spaces in node IDs around arrows: Node One --> Node Two -> Node_One --> Node_Two
+    chart = chart.replace(/(\s+)([\w]+(?:\s+[\w]+)+)(\s*-->)/gm, (match, pre, nodeId, arrow) => {
+        return pre + nodeId.replace(/\s+/g, '_') + arrow;
+    });
+    chart = chart.replace(/(-->(?:\|[^|]*\|)?\s*)([\w]+(?:\s+[\w]+)+)(\s*$)/gm, (match, arrow, nodeId, end) => {
+        return arrow + nodeId.replace(/\s+/g, '_') + end;
+    });
+
     return chart.trim();
 }
 

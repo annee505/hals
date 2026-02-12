@@ -453,17 +453,21 @@ CRITICAL RULES:
 - Only include a Code Example section if the course is about programming, software development, or a technical coding topic. If the course is about history, music, art, science, business, or any non-programming topic, do NOT include any code blocks at all.
 - Use markdown tables where appropriate (timelines, comparisons, etc.). NEVER use ASCII art or box-drawing characters.
 - For visual diagrams, use fenced Mermaid code blocks. CRITICAL Mermaid rules:
-  - Always start with a diagram type on the FIRST line: graph TD, graph LR, flowchart TD, sequenceDiagram, classDiagram, etc.
-  - Always quote node labels that contain spaces or special characters: A["Node Label Here"]
+  - Always start with a diagram type on the FIRST line: graph TD, graph LR, flowchart TD, sequenceDiagram, etc.
+  - Node IDs must NOT contain spaces. Use underscores or camelCase: BluesStyle, Rock_Music, Step1 (NEVER "Blues Style" or "Rock Music")
+  - Always quote node labels that contain spaces: A["Node Label Here"]
+  - Always connect nodes with arrows. Never define nodes without connections.
   - Use simple arrow syntax: A --> B or A -->|"label"| B
-  - Do NOT use parentheses () in node IDs. Use square brackets [] for labels.
-  - Keep diagrams SIMPLE: max 8-10 nodes.
-  - Example format:
+  - Do NOT use parentheses () in node IDs or labels. Use square brackets [] only.
+  - Keep diagrams SIMPLE: max 6-8 nodes.
+  - Example of CORRECT mermaid:
     ${'```'}mermaid
     graph TD
-      A["Start Here"] --> B["Step Two"]
-      B --> C["Step Three"]
-      C --> D["Final Step"]
+      Start["Starting Point"] --> Step1["First Step"]
+      Step1 --> Step2["Second Step"]
+      Step2 --> Result["Final Result"]
+      Step1 --> Alt["Alternative Path"]
+      Alt --> Result
     ${'```'}
 
 ${styleBlock}
