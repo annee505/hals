@@ -48,8 +48,17 @@ export const AuthProvider = ({ children }) => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session?.user && mounted) {
-                    const fullUser = await fetchProfile(session.user);
-                    if (mounted) setUser(fullUser);
+                    // OPTIMISTIC: set user from session immediately to unblock UI
+                    setUser(prev => prev || {
+                        ...session.user,
+                        name: session.user.email?.split('@')[0] || 'User'
+                    });
+                    setLoading(false);
+
+                    // Fetch full profile in background
+                    fetchProfile(session.user).then(fullUser => {
+                        if (mounted && fullUser) setUser(fullUser);
+                    }).catch(() => { /* profile fetch failed, keep session data */ });
                 }
             } catch (error) {
                 console.error('Error checking session:', error);

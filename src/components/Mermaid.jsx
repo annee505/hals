@@ -41,18 +41,25 @@ function sanitizeChart(raw) {
     // Remove trailing semicolons
     chart = chart.replace(/;\s*$/gm, '');
 
+    // Split first line (diagram type like "graph TD") from body to avoid corrupting it
+    const lines = chart.split('\n');
+    const firstLine = lines[0];
+    let body = lines.slice(1).join('\n');
+
     // Fix spaces in node IDs before brackets: Blues Style["label"] -> Blues_Style["label"]
-    chart = chart.replace(/^(\s*)(\w+(?:\s+\w+)+)(\s*[\[\(\{])/gm, (match, indent, nodeId, bracket) => {
+    body = body.replace(/^(\s*)(\w+(?:\s+\w+)+)(\s*[\[\(\{])/gm, (match, indent, nodeId, bracket) => {
         return indent + nodeId.replace(/\s+/g, '_') + bracket;
     });
 
     // Fix spaces in node IDs around arrows: Node One --> Node Two -> Node_One --> Node_Two
-    chart = chart.replace(/(\s+)([\w]+(?:\s+[\w]+)+)(\s*-->)/gm, (match, pre, nodeId, arrow) => {
+    body = body.replace(/(\s+)([\w]+(?:\s+[\w]+)+)(\s*-->)/gm, (match, pre, nodeId, arrow) => {
         return pre + nodeId.replace(/\s+/g, '_') + arrow;
     });
-    chart = chart.replace(/(-->(?:\|[^|]*\|)?\s*)([\w]+(?:\s+[\w]+)+)(\s*$)/gm, (match, arrow, nodeId, end) => {
+    body = body.replace(/(-->(?:\|[^|]*\|)?\s*)([\w]+(?:\s+[\w]+)+)(\s*$)/gm, (match, arrow, nodeId, end) => {
         return arrow + nodeId.replace(/\s+/g, '_') + end;
     });
+
+    chart = firstLine + '\n' + body;
 
     return chart.trim();
 }
@@ -72,9 +79,17 @@ const Mermaid = ({ chart }) => {
         const sanitized = sanitizeChart(chart);
         const uniqueId = `mermaid-diagram-${++renderCounter}`;
 
+        // Create a temporary container for mermaid to render into (required for layout calculation)
+        const tempContainer = document.createElement('div');
+        tempContainer.id = uniqueId;
+        tempContainer.style.visibility = 'hidden';
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.width = '100%'; // simulate width
+        document.body.appendChild(tempContainer);
+
         try {
-            // Use mermaid.render which returns an SVG string
-            const { svg } = await mermaid.render(uniqueId, sanitized);
+            // Pass the temp container to render
+            const { svg } = await mermaid.render(uniqueId, sanitized, tempContainer);
             if (svg && svg.length > 50) {
                 setSvgContent(svg);
                 setError(false);
@@ -82,15 +97,14 @@ const Mermaid = ({ chart }) => {
                 throw new Error('Empty SVG output');
             }
         } catch (err) {
-            console.warn('Mermaid render failed:', err?.message || err, '\nChart:', sanitized);
+            console.error('Mermaid render failed:', err);
             setError(true);
             setSvgContent(null);
-
-            // Cleanup: mermaid.render creates a temp element with the ID
-            try {
-                const orphan = document.getElementById(uniqueId);
-                if (orphan) orphan.remove();
-            } catch (e) { /* ignore */ }
+        } finally {
+            // Cleanup temp container
+            if (document.body.contains(tempContainer)) {
+                document.body.removeChild(tempContainer);
+            }
         }
     }, [chart]);
 
