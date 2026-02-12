@@ -31,14 +31,21 @@ function sanitizeChart(raw) {
         'erDiagram', 'gantt', 'pie', 'gitgraph', 'mindmap', 'timeline', 'journey',
         'quadrantChart', 'xychart', 'block'];
     const firstWord = chart.split(/[\s\n]/)[0].toLowerCase();
+    // Allow TB (Top-Bottom) alias for TD
     if (!validStarts.some(s => firstWord.startsWith(s.toLowerCase()))) {
-        chart = `graph TD\n${chart}`;
+        if (firstWord.startsWith('graph') || firstWord.startsWith('flowchart')) {
+            // It's valid but maybe with TB
+        } else {
+            chart = `graph TD\n${chart}`;
+        }
     }
 
     // Fix common AI arrow mistakes:
     // -->|label|> should be -->|label| (stray > after pipe)
-    chart = chart.replace(/\|>\s?/g, '| ');
-    chart = chart.replace(/\|\s+>/g, '| ');
+    // Replace |> with | globally
+    chart = chart.replace(/\|>/g, '|');
+    chart = chart.replace(/\|\s+>/g, '|');
+
     // Remove trailing semicolons
     chart = chart.replace(/;\s*$/gm, '');
 

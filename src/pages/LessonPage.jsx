@@ -12,7 +12,9 @@ import ThemeToggle from '../components/ThemeToggle';
 import NotesPanel from '../components/NotesPanel';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
+import rehypeKatex from 'rehype-katex';
 import 'highlight.js/styles/github-dark.min.css';
 import Mermaid from '../components/Mermaid';
 
@@ -260,8 +262,8 @@ const LessonPage = () => {
                             prose-hr:border-gray-200 dark:prose-hr:border-gray-700
                             prose-img:rounded-xl prose-img:shadow-lg">
                             <ReactMarkdown
-                                remarkPlugins={[remarkGfm]}
-                                rehypePlugins={[rehypeHighlight]}
+                                remarkPlugins={[remarkGfm, remarkMath]}
+                                rehypePlugins={[rehypeHighlight, rehypeKatex]}
                                 components={{
                                     a: ({ node, ...props }) => (
                                         <a {...props} className="text-primary hover:underline transition-colors" target="_blank" rel="noopener noreferrer" />
