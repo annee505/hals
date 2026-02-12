@@ -1,18 +1,14 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 
-let mermaidInitialized = false;
-
-function initMermaid() {
-    if (mermaidInitialized) return;
-    mermaid.initialize({
-        startOnLoad: false,
-        theme: 'default',
-        securityLevel: 'loose',
-        fontFamily: 'Inter, system-ui, sans-serif'
-    });
-    mermaidInitialized = true;
-}
+// Initialize mermaid once
+mermaid.initialize({
+    startOnLoad: false,
+    theme: 'default',
+    securityLevel: 'loose',
+    fontFamily: 'Inter, system-ui, sans-serif',
+    logLevel: 'error'
+});
 
 // Sanitize common AI-generated Mermaid mistakes
 function sanitizeChart(raw) {
@@ -41,15 +37,14 @@ function sanitizeChart(raw) {
     }
 
     // Fix common AI arrow mistakes:
-    // -->|label|> should be -->|label| (stray > after pipe)
-    // Replace |> with | globally
+    // Replace |> with | globally (fixes -->|Label|> error)
     chart = chart.replace(/\|>/g, '|');
     chart = chart.replace(/\|\s+>/g, '|');
 
     // Remove trailing semicolons
     chart = chart.replace(/;\s*$/gm, '');
 
-    // Split first line (diagram type like "graph TD") from body to avoid corrupting it
+    // Split first line (diagram type) from body to apply detailed regexes
     const lines = chart.split('\n');
     const firstLine = lines[0];
     let body = lines.slice(1).join('\n');
@@ -75,66 +70,48 @@ function sanitizeChart(raw) {
     return chart.trim();
 }
 
-// Global render counter to create unique IDs
-let renderCounter = 0;
-
 const Mermaid = ({ chart }) => {
     const containerRef = useRef(null);
-    const [svgContent, setSvgContent] = useState(null);
-    const [error, setError] = useState(false);
+    const [error, setError] = useState(null);
+    const [isRendering, setIsRendering] = useState(true);
 
-    const renderChart = useCallback(async () => {
-        if (!chart) return;
-
-        initMermaid();
-        const sanitized = sanitizeChart(chart);
-        const uniqueId = `mermaid-diagram-${++renderCounter}`;
-
-        // Create a temporary container for mermaid to render into (required for layout calculation)
-        const tempContainer = document.createElement('div');
-        tempContainer.id = uniqueId;
-        // Move off-screen to ensure browser calculates layout (visibility:hidden or opacity:0 can skip layout)
-        tempContainer.style.position = 'fixed';
-        tempContainer.style.left = '-10000px';
-        tempContainer.style.top = '-10000px';
-        tempContainer.style.width = '800px';
-        tempContainer.style.height = '600px';
-        document.body.appendChild(tempContainer);
-
-        try {
-            // Pass the temp container to render
-            const { svg } = await mermaid.render(uniqueId, sanitized, tempContainer);
-            if (svg && svg.length > 50) {
-                setSvgContent(svg);
-                setError(null);
-            } else {
-                throw new Error('Empty SVG output');
-            }
-        } catch (err) {
-            console.error('Mermaid render failed:', err);
-            setError(err.message || 'Unknown error');
-            setSvgContent(null);
-        } finally {
-            // Cleanup temp container
-            if (document.body.contains(tempContainer)) {
-                document.body.removeChild(tempContainer);
-            }
-        }
-    }, [chart]);
+    const sanitized = sanitizeChart(chart);
 
     useEffect(() => {
-        renderChart();
-    }, [renderChart]);
+        if (!containerRef.current) return;
+
+        const runMermaid = async () => {
+            setIsRendering(true);
+            setError(null);
+
+            try {
+                // We use key={sanitized} on the div, so it's always a fresh element with text content
+                await mermaid.run({
+                    nodes: [containerRef.current],
+                    suppressErrors: false
+                });
+                setIsRendering(false);
+            } catch (err) {
+                console.error('Mermaid run failed:', err);
+                setError(err);
+                setIsRendering(false);
+            }
+        };
+
+        // Small timeout to allow DOM paint? usually usually not needed with Effect but safer
+        requestAnimationFrame(() => runMermaid());
+
+    }, [sanitized]);
 
     if (error) {
         return (
             <details className="my-6 bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden">
                 <summary className="px-4 py-3 text-sm text-gray-400 cursor-pointer hover:text-gray-300 select-none flex justify-between">
                     <span>📊 Diagram error (click to view source)</span>
-                    <span className="text-red-400 text-xs font-mono">{String(error).slice(0, 50)}...</span>
+                    <span className="text-red-400 text-xs font-mono">{String(error.message || error).slice(0, 50)}...</span>
                 </summary>
                 <div className="p-4 border-t border-gray-700/50">
-                    <p className="text-red-400 text-xs font-mono mb-2 whitespace-pre-wrap">{String(error)}</p>
+                    <p className="text-red-400 text-xs font-mono mb-2 whitespace-pre-wrap">{String(error.message || error)}</p>
                     <pre className="text-xs text-gray-500 overflow-x-auto whitespace-pre-wrap">
                         {chart}
                     </pre>
@@ -143,30 +120,23 @@ const Mermaid = ({ chart }) => {
         );
     }
 
-    if (svgContent) {
-        return (
-            <div
-                className="mermaid-container my-6 not-prose"
-                style={{
-                    background: '#ffffff',
-                    padding: '24px',
-                    borderRadius: '12px',
-                    border: '1px solid #e5e7eb',
-                    overflowX: 'auto',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    maxWidth: '100%'
-                }}
-                dangerouslySetInnerHTML={{ __html: svgContent }}
-            />
-        );
-    }
-
-    // Loading state
     return (
-        <div className="my-6 flex justify-center items-center bg-gray-800/30 p-8 rounded-xl border border-gray-700/50">
-            <span className="text-sm text-gray-500">Loading diagram...</span>
+        <div className="my-6 flex justify-center">
+            {/* key={sanitized} forces React to destroy and recreate the div when chart changes,
+                restoring it to a plain text container before mermaid.run processes it. */}
+            <div
+                key={sanitized}
+                className="mermaid bg-white dark:bg-gray-800 p-4 rounded-xl overflow-x-auto"
+                ref={containerRef}
+                style={{ opacity: isRendering ? 0 : 1, transition: 'opacity 0.2s' }}
+            >
+                {sanitized}
+            </div>
+            {isRendering && (
+                <div className="absolute py-10 text-gray-400 animate-pulse">
+                    Loading diagram...
+                </div>
+            )}
         </div>
     );
 };
