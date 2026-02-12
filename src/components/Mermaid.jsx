@@ -3,10 +3,20 @@ import mermaid from 'mermaid';
 
 mermaid.initialize({
     startOnLoad: false,
-    theme: 'dark',
+    theme: 'neutral',
     securityLevel: 'loose',
-    fontFamily: 'inherit',
-    suppressErrorRendering: true
+    fontFamily: 'Inter, sans-serif',
+    themeVariables: {
+        primaryColor: '#818cf8',
+        primaryTextColor: '#1f2937',
+        primaryBorderColor: '#6366f1',
+        lineColor: '#6366f1',
+        secondaryColor: '#e0e7ff',
+        tertiaryColor: '#f0f0ff',
+        noteBkgColor: '#e0e7ff',
+        noteTextColor: '#1f2937',
+        fontSize: '14px'
+    }
 });
 
 // Sanitize common AI-generated Mermaid mistakes
@@ -27,13 +37,13 @@ function sanitizeChart(raw) {
         'quadrantChart', 'xychart', 'block'];
     const firstWord = chart.split(/[\s\n]/)[0].toLowerCase();
     if (!validStarts.some(s => firstWord.startsWith(s.toLowerCase()))) {
-        // Wrap in a default flowchart if no valid diagram type
         chart = `graph TD\n${chart}`;
     }
+
     // Fix common AI arrow mistakes:
     // -->|label|> should be -->|label| (stray > after pipe)
     chart = chart.replace(/\|>\s/g, '| ');
-    // Remove trailing semicolons (valid in some contexts but causes issues)
+    // Remove trailing semicolons
     chart = chart.replace(/;\s*$/gm, '');
 
     return chart.trim();
@@ -46,6 +56,7 @@ const Mermaid = ({ chart }) => {
     useEffect(() => {
         if (!containerRef.current || !chart) return;
 
+        let cancelled = false;
         const sanitized = sanitizeChart(chart);
         const renderId = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -53,17 +64,26 @@ const Mermaid = ({ chart }) => {
 
         mermaid.render(renderId, sanitized)
             .then(({ svg }) => {
+                if (cancelled) return;
+                if (!svg || svg.trim().length < 10) {
+                    // Empty or trivial SVG = silent failure
+                    setError(true);
+                    return;
+                }
                 if (containerRef.current) {
                     containerRef.current.innerHTML = svg;
                 }
             })
             .catch((err) => {
+                if (cancelled) return;
                 console.warn('Mermaid render failed:', err?.message || err);
                 setError(true);
                 // Clean up any orphaned SVG element mermaid may have created
                 const orphan = document.getElementById(renderId);
                 if (orphan) orphan.remove();
             });
+
+        return () => { cancelled = true; };
     }, [chart]);
 
     if (error) {
@@ -80,7 +100,7 @@ const Mermaid = ({ chart }) => {
     }
 
     return (
-        <div className="mermaid-container my-6 flex justify-center bg-gray-900/50 p-4 rounded-xl border border-gray-700/50 overflow-x-auto">
+        <div className="mermaid-container my-6 flex justify-center bg-white dark:bg-gray-100 p-6 rounded-xl border border-gray-200 dark:border-gray-600 overflow-x-auto shadow-sm">
             <div ref={containerRef} className="w-full text-center" />
         </div>
     );
