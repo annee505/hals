@@ -22,6 +22,10 @@ function sanitizeChart(raw) {
     // Remove wrapping ```mermaid ... ``` if the AI double-wrapped
     chart = chart.replace(/^```mermaid\s*/i, '').replace(/```\s*$/, '');
 
+    // Strips comments (both %% and // which AI sometimes hallucinates)
+    chart = chart.replace(/%%.*$/gm, '');
+    chart = chart.replace(/\/\/.*$/gm, '');
+
     // Ensure it starts with a valid diagram type
     const validStarts = ['graph', 'flowchart', 'sequenceDiagram', 'classDiagram', 'stateDiagram',
         'erDiagram', 'gantt', 'pie', 'gitgraph', 'mindmap', 'timeline', 'journey',
@@ -47,6 +51,13 @@ function sanitizeChart(raw) {
 
     // Remove trailing semicolons
     chart = chart.replace(/;\s*$/gm, '');
+
+    // Auto-quote arrow labels to handle math symbols like ln(2)/k
+    // Matches -->|Label| and replaces with -->|"Label"| unless already quoted
+    // Note: This regex is simple and assumes labels don't contain | inside
+    // Matches arrow types: -->, -.->, ==>
+    const quoteLabelRegex = /([-=.]+(?:>))\|([^"|\n]+)\|/g;
+    chart = chart.replace(quoteLabelRegex, '$1|"$2"|');
 
     // Split first line (diagram type) from body to apply detailed regexes
     const lines = chart.split('\n');
