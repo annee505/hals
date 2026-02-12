@@ -1,23 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mermaid from 'mermaid';
 
-mermaid.initialize({
-    startOnLoad: false,
-    theme: 'neutral',
-    securityLevel: 'loose',
-    fontFamily: 'Inter, sans-serif',
-    themeVariables: {
-        primaryColor: '#818cf8',
-        primaryTextColor: '#1f2937',
-        primaryBorderColor: '#6366f1',
-        lineColor: '#6366f1',
-        secondaryColor: '#e0e7ff',
-        tertiaryColor: '#f0f0ff',
-        noteBkgColor: '#e0e7ff',
-        noteTextColor: '#1f2937',
-        fontSize: '14px'
-    }
-});
+let mermaidInitialized = false;
+
+function initMermaid() {
+    if (mermaidInitialized) return;
+    mermaid.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose',
+        fontFamily: 'Inter, system-ui, sans-serif'
+    });
+    mermaidInitialized = true;
+}
 
 // Sanitize common AI-generated Mermaid mistakes
 function sanitizeChart(raw) {
@@ -49,59 +44,73 @@ function sanitizeChart(raw) {
     return chart.trim();
 }
 
+// Global render counter to create unique IDs
+let renderCounter = 0;
+
 const Mermaid = ({ chart }) => {
     const containerRef = useRef(null);
+    const [svgContent, setSvgContent] = useState(null);
     const [error, setError] = useState(false);
 
-    useEffect(() => {
-        if (!containerRef.current || !chart) return;
+    const renderChart = useCallback(async () => {
+        if (!chart) return;
 
-        let cancelled = false;
+        initMermaid();
         const sanitized = sanitizeChart(chart);
-        const renderId = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
+        const uniqueId = `mermaid-diagram-${++renderCounter}`;
 
-        setError(false);
+        try {
+            // Use mermaid.render which returns an SVG string
+            const { svg } = await mermaid.render(uniqueId, sanitized);
+            if (svg && svg.length > 50) {
+                setSvgContent(svg);
+                setError(false);
+            } else {
+                throw new Error('Empty SVG output');
+            }
+        } catch (err) {
+            console.warn('Mermaid render failed:', err?.message || err, '\nChart:', sanitized);
+            setError(true);
+            setSvgContent(null);
 
-        mermaid.render(renderId, sanitized)
-            .then(({ svg }) => {
-                if (cancelled) return;
-                if (!svg || svg.trim().length < 10) {
-                    // Empty or trivial SVG = silent failure
-                    setError(true);
-                    return;
-                }
-                if (containerRef.current) {
-                    containerRef.current.innerHTML = svg;
-                }
-            })
-            .catch((err) => {
-                if (cancelled) return;
-                console.warn('Mermaid render failed:', err?.message || err);
-                setError(true);
-                // Clean up any orphaned SVG element mermaid may have created
-                const orphan = document.getElementById(renderId);
+            // Cleanup: mermaid.render creates a temp element with the ID
+            try {
+                const orphan = document.getElementById(uniqueId);
                 if (orphan) orphan.remove();
-            });
-
-        return () => { cancelled = true; };
+            } catch (e) { /* ignore */ }
+        }
     }, [chart]);
+
+    useEffect(() => {
+        renderChart();
+    }, [renderChart]);
 
     if (error) {
         return (
             <details className="my-6 bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden">
-                <summary className="px-4 py-3 text-sm text-gray-400 cursor-pointer hover:text-gray-300">
-                    📊 Diagram (click to view source)
+                <summary className="px-4 py-3 text-sm text-gray-400 cursor-pointer hover:text-gray-300 select-none">
+                    📊 Diagram could not render (click to view source)
                 </summary>
-                <pre className="px-4 py-3 text-xs text-gray-500 overflow-x-auto whitespace-pre-wrap">
+                <pre className="px-4 py-3 text-xs text-gray-500 overflow-x-auto whitespace-pre-wrap border-t border-gray-700/50">
                     {chart}
                 </pre>
             </details>
         );
     }
 
+    if (svgContent) {
+        return (
+            <div
+                className="mermaid-container my-6 flex justify-center bg-white p-6 rounded-xl border border-gray-200 dark:border-gray-600 overflow-x-auto shadow-sm"
+                dangerouslySetInnerHTML={{ __html: svgContent }}
+            />
+        );
+    }
+
+    // Loading state
     return (
-        <div className="mermaid-container my-6 flex justify-center bg-white dark:bg-gray-100 p-6 rounded-xl border border-gray-200 dark:border-gray-600 overflow-x-auto shadow-sm">
-            <div ref={containerRef} className="w-full text-center" />
+        <div className="my-6 flex justify-center items-center bg-gray-800/30 p-8 rounded-xl border border-gray-700/50">
+            <span className="text-sm text-gray-500">Loading diagram...</span>
         </div>
     );
 };
