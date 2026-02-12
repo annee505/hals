@@ -11,13 +11,16 @@ import { aiKnowledgeService } from '../services/aiKnowledge';
 import { gamificationService } from '../services/gamification';
 import { streakService } from '../services/streakService';
 import { quizGenerator } from '../services/quizGenerator';
+import { bookmarkService } from '../services/bookmarkService';
+import { ratingService } from '../services/ratingService';
 import Flashcards from '../components/Flashcards';
 import FileUpload from '../components/FileUpload';
 import Assessment from '../components/Assessment';
 import QuizTaker from '../components/QuizTaker';
 import ThemeToggle from '../components/ThemeToggle';
 import BadgeUnlockPopup from '../components/BadgeUnlockPopup';
-import { BookOpen, CheckCircle, Circle, Award, Brain, Upload, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
+import StarRating from '../components/StarRating';
+import { BookOpen, CheckCircle, Circle, Award, Brain, Upload, ChevronDown, ChevronRight, Loader2, Bookmark, BookmarkCheck, Star } from 'lucide-react';
 
 const CourseDetail = () => {
     const navigate = useNavigate();
@@ -37,6 +40,10 @@ const CourseDetail = () => {
     const [newBadges, setNewBadges] = useState([]);
     const [activeQuizId, setActiveQuizId] = useState(null);
     const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+    const [bookmarks, setBookmarks] = useState({});
+    const [userRating, setUserRating] = useState(null);
+    const [reviewText, setReviewText] = useState('');
+    const [showReviewInput, setShowReviewInput] = useState(false);
 
     // Loading state
     const [isLoading, setIsLoading] = useState(true);
@@ -137,6 +144,39 @@ const CourseDetail = () => {
 
         loadData();
     }, [courseId, user]);
+
+    // Load bookmarks and ratings
+    useEffect(() => {
+        if (!user || !courseId || !content) return;
+        const bm = {};
+        content.modules?.forEach(mod => {
+            mod.lessons?.forEach(lesson => {
+                bm[lesson.id] = bookmarkService.isBookmarked(user.id, courseId, lesson.id);
+            });
+        });
+        setBookmarks(bm);
+        const existing = ratingService.getRating(user.id, courseId);
+        if (existing) {
+            setUserRating(existing.stars);
+            setReviewText(existing.review || '');
+        }
+    }, [user, courseId, content]);
+
+    const handleToggleBookmark = (lessonId, lessonTitle) => {
+        const newState = bookmarkService.toggleBookmark(user.id, courseId, lessonId, lessonTitle);
+        setBookmarks(prev => ({ ...prev, [lessonId]: newState }));
+    };
+
+    const handleRate = (stars) => {
+        setUserRating(stars);
+        ratingService.setRating(user.id, courseId, stars, reviewText);
+        setShowReviewInput(true);
+    };
+
+    const handleSaveReview = () => {
+        ratingService.setRating(user.id, courseId, userRating, reviewText);
+        setShowReviewInput(false);
+    };
 
     const toggleModule = (moduleId) => {
         setExpandedModules(prev => ({ ...prev, [moduleId]: !prev[moduleId] }));
@@ -311,7 +351,18 @@ const CourseDetail = () => {
                                                             <p className="text-sm text-gray-600 dark:text-gray-400">{lesson.duration}</p>
                                                         </div>
                                                     </div>
-                                                    <div className="flex space-x-2">
+                                                    <div className="flex items-center space-x-2">
+                                                        <button
+                                                            onClick={() => handleToggleBookmark(lesson.id, lesson.title)}
+                                                            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                                                            title={bookmarks[lesson.id] ? 'Remove bookmark' : 'Bookmark lesson'}
+                                                        >
+                                                            {bookmarks[lesson.id] ? (
+                                                                <BookmarkCheck className="w-4 h-4 text-primary" />
+                                                            ) : (
+                                                                <Bookmark className="w-4 h-4 text-gray-400" />
+                                                            )}
+                                                        </button>
                                                         <button
                                                             onClick={() => navigate(`/course/${courseId}/lesson/${lesson.id}`)}
                                                             className="px-3 py-1 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors"
@@ -340,6 +391,56 @@ const CourseDetail = () => {
                     {/* Learning Tools Sidebar */}
                     <div className="space-y-4">
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white">Learning Tools</h3>
+
+                        {/* Rate This Course */}
+                        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Star className="w-5 h-5 text-yellow-400" />
+                                <p className="font-semibold text-gray-900 dark:text-white">Rate This Course</p>
+                            </div>
+                            <StarRating rating={userRating || 0} onRate={handleRate} size="md" />
+                            {showReviewInput && (
+                                <div className="mt-3">
+                                    <textarea
+                                        value={reviewText}
+                                        onChange={(e) => setReviewText(e.target.value)}
+                                        placeholder="Write a short review (optional)..."
+                                        className="w-full p-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                        rows={2}
+                                    />
+                                    <button
+                                        onClick={handleSaveReview}
+                                        className="mt-2 px-3 py-1 text-sm bg-primary text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                                    >
+                                        Save Review
+                                    </button>
+                                </div>
+                            )}
+                            {userRating && !showReviewInput && reviewText && (
+                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 italic">"{reviewText}"</p>
+                            )}
+                        </div>
+
+                        {/* Bookmarked Lessons */}
+                        {Object.values(bookmarks).some(b => b) && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 shadow-sm">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <BookmarkCheck className="w-5 h-5 text-primary" />
+                                    <p className="font-semibold text-gray-900 dark:text-white">Bookmarked Lessons</p>
+                                </div>
+                                <div className="space-y-1">
+                                    {bookmarkService.getBookmarksForCourse(user.id, courseId).map(bm => (
+                                        <button
+                                            key={bm.lessonId}
+                                            onClick={() => navigate(`/course/${courseId}/lesson/${bm.lessonId}`)}
+                                            className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors truncate"
+                                        >
+                                            📌 {bm.lessonTitle || 'Untitled Lesson'}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Flashcards */}
                         {isLoadingFlashcards ? (

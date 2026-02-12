@@ -6,7 +6,8 @@ import { database } from '../services/database';
 import { courseContentService } from '../services/courseContent';
 import { gamificationService } from '../services/gamification';
 import { notesService } from '../services/notesService';
-import { ArrowLeft, CheckCircle, Circle, ChevronRight, ChevronLeft, BookOpen, Loader2, StickyNote } from 'lucide-react';
+import { bookmarkService } from '../services/bookmarkService';
+import { ArrowLeft, CheckCircle, Circle, ChevronRight, ChevronLeft, BookOpen, Loader2, StickyNote, Bookmark, BookmarkCheck } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
 import NotesPanel from '../components/NotesPanel';
 import ReactMarkdown from 'react-markdown';
@@ -28,6 +29,7 @@ const LessonPage = () => {
     const [error, setError] = useState(null);
     const [showNotes, setShowNotes] = useState(false);
     const [noteCount, setNoteCount] = useState(0);
+    const [isBookmarked, setIsBookmarked] = useState(false);
 
     useEffect(() => {
         const loadLessonData = async () => {
@@ -90,6 +92,7 @@ const LessonPage = () => {
         // Load note count for badge
         if (user && courseId && lessonId) {
             setNoteCount(notesService.getNotesForLesson(user.id, courseId, lessonId).length);
+            setIsBookmarked(bookmarkService.isBookmarked(user.id, courseId, lessonId));
         }
     }, [courseId, lessonId, user]);
 
@@ -200,6 +203,24 @@ const LessonPage = () => {
                                     {noteCount}
                                 </span>
                             )}
+                        </button>
+                        <button
+                            onClick={() => {
+                                const newState = bookmarkService.toggleBookmark(user.id, courseId, lessonId, currentLesson?.title);
+                                setIsBookmarked(newState);
+                            }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${isBookmarked
+                                ? 'text-primary bg-primary/10 dark:bg-primary/20'
+                                : 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                }`}
+                            title={isBookmarked ? 'Remove bookmark' : 'Bookmark this lesson'}
+                        >
+                            {isBookmarked ? (
+                                <BookmarkCheck className="w-4 h-4" />
+                            ) : (
+                                <Bookmark className="w-4 h-4" />
+                            )}
+                            <span className="hidden sm:inline">{isBookmarked ? 'Saved' : 'Save'}</span>
                         </button>
                         <ThemeToggle />
                     </div>
