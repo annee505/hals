@@ -37,7 +37,8 @@ function sanitizeChart(raw) {
 
     // Fix common AI arrow mistakes:
     // -->|label|> should be -->|label| (stray > after pipe)
-    chart = chart.replace(/\|>\s/g, '| ');
+    chart = chart.replace(/\|>\s?/g, '| ');
+    chart = chart.replace(/\|\s+>/g, '| ');
     // Remove trailing semicolons
     chart = chart.replace(/;\s*$/gm, '');
 

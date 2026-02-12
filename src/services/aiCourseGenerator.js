@@ -147,10 +147,10 @@ async function tryGemini(prompt) {
 
 // Try to generate with OpenRouter (free tier models)
 const OPENROUTER_MODELS = [
-    'meta-llama/llama-4-maverick:free',
-    'google/gemma-3-27b-it:free',
-    'mistralai/mistral-small-3.1-24b-instruct:free',
-    'nvidia/llama-3.1-nemotron-nano-8b-v1:free'
+    'meta-llama/llama-3.1-8b-instruct:free',
+    'google/gemma-2-9b-it:free',
+    'microsoft/phi-3-mini-128k-instruct:free',
+    'mistralai/mistral-7b-instruct:free'
 ];
 
 export async function tryOpenRouter(prompt, jsonMode = false) {
