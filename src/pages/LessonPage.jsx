@@ -276,21 +276,23 @@ const LessonPage = () => {
                                     ),
                                     code: ({ node, inline, className, children, ...props }) => {
                                         const match = /language-mermaid/.exec(className || '');
-                                        return !inline && match ? (
-                                            <Mermaid chart={String(children).replace(/\n$/, '')} />
-                                        ) : (
+                                        if (!inline && match) {
+                                            // Wrap in a div with data-mermaid attribute so the pre override can detect it
+                                            return <div data-mermaid="true"><Mermaid chart={String(children).replace(/\n$/, '')} /></div>;
+                                        }
+                                        return (
                                             <code className={className} {...props}>
                                                 {children}
                                             </code>
                                         );
                                     },
                                     pre: ({ node, children, ...props }) => {
-                                        // If the child is a Mermaid diagram, render without pre styling
+                                        // Check if this wraps a Mermaid diagram
                                         const child = Array.isArray(children) ? children[0] : children;
-                                        if (child?.type === Mermaid) {
+                                        if (child?.props?.['data-mermaid']) {
                                             return <>{children}</>;
                                         }
-                                        return <pre {...props} className="!bg-gray-900 rounded-xl shadow-lg border border-gray-700 overflow-x-auto" />;
+                                        return <pre {...props} className="!bg-gray-900 rounded-xl shadow-lg border border-gray-700 overflow-x-auto">{children}</pre>;
                                     },
                                 }}
                             >
