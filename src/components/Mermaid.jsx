@@ -90,12 +90,11 @@ const Mermaid = ({ chart }) => {
         // Create a temporary container for mermaid to render into (required for layout calculation)
         const tempContainer = document.createElement('div');
         tempContainer.id = uniqueId;
-        // Use opacity 0 instead of visibility:hidden because getBBox() sometimes fails on hidden elements
-        tempContainer.style.opacity = '0';
-        tempContainer.style.overflow = 'hidden';
-        tempContainer.style.pointerEvents = 'none';
-        tempContainer.style.position = 'absolute';
-        tempContainer.style.width = '800px'; // explicit width for layout
+        // Move off-screen to ensure browser calculates layout (visibility:hidden or opacity:0 can skip layout)
+        tempContainer.style.position = 'fixed';
+        tempContainer.style.left = '-10000px';
+        tempContainer.style.top = '-10000px';
+        tempContainer.style.width = '800px';
         tempContainer.style.height = '600px';
         document.body.appendChild(tempContainer);
 
