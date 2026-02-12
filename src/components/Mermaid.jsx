@@ -63,16 +63,18 @@ function sanitizeChart(raw) {
 
     // Fix spaces/symbols in node IDs around arrows
     // Regex matches: (pre)(ID)(arrow start)
-    // ID can contain word chars, spaces, +, -
-    // arrow start matches -, =, . followed by > or |
-    const arrowRegex = /(\s+)([\w\s+\-]+)(\s*[-=.]+(?:>|\|))/gm;
+    // ID matched group #2 is strictly alphanumeric/spaces/plus/minus
+    // BUT we must exclude lines with quotes/brackets to avoid breaking labels
+    // So we use a negative lookahead or strict character class
+    const arrowRegex = /(\s+)([^"\[\]\(\)\n]+?)(\s*[-=.]+(?:>|\|))/gm;
     body = body.replace(arrowRegex, (match, pre, nodeId, arrow) => {
+        // Only sanitize if it truly looks like an ID (no quotes/brackets in match)
         return pre + nodeId.replace(/[\s\+\-]+/g, '_') + arrow;
     });
 
     // Handle end of line nodes (e.g. A --> B)
     // Regex matches: (arrow)(ID)(end)
-    const endNodeRegex = /([-=.]+(?:>|\|)(?:\|[^|]*\|)?\s*)([\w\s+\-]+)(\s*$)/gm;
+    const endNodeRegex = /([-=.]+(?:>|\|)(?:\|[^|]*\|)?\s*)([^"\[\]\(\)\n]+?)(\s*$)/gm;
     body = body.replace(endNodeRegex, (match, arrow, nodeId, end) => {
         return arrow + nodeId.replace(/[\s\+\-]+/g, '_') + end;
     });
@@ -154,7 +156,7 @@ const Mermaid = ({ chart }) => {
                 <div className="p-4 border-t border-gray-700/50">
                     <p className="text-red-400 text-xs font-mono mb-2 whitespace-pre-wrap">{String(error.message || error)}</p>
                     <pre className="text-xs text-gray-500 overflow-x-auto whitespace-pre-wrap">
-                        {chart}
+                        {chart} // Display raw chart to user
                     </pre>
                 </div>
             </details>
