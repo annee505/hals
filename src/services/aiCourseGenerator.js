@@ -147,14 +147,17 @@ async function tryGemini(prompt) {
 // Helper for delay
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-async function tryGroq(prompt, jsonMode = false) {
+// Keep track of models that have hit rate limits in this session
+const deadModels = new Set();
+
+export async function tryGroq(prompt, jsonMode = false) {
     if (!groqApiKey) {
         console.warn('Groq: no API key configured');
         return null;
     }
 
     // Helper to make request with retries
-    const makeGroqRequest = async (model, retries = 3) => {
+    const makeGroqRequest = async (model, retries = 2) => {
         try {
             const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
@@ -173,11 +176,17 @@ async function tryGroq(prompt, jsonMode = false) {
 
             if (!response.ok) {
                 // Handle Rate Limiting (429)
-                if (response.status === 429 && retries > 0) {
-                    const waitTime = 5000; // Wait 5 seconds
-                    console.warn(`Groq ${model} 429 Rate Limit. Waiting ${waitTime}ms... (${retries} retries left)`);
-                    await delay(waitTime);
-                    return makeGroqRequest(model, retries - 1);
+                if (response.status === 429) {
+                    if (retries > 0) {
+                        const waitTime = 2000;
+                        console.warn(`Groq ${model} 429 Rate Limit. Waiting ${waitTime}ms... (${retries} retries left)`);
+                        await delay(waitTime);
+                        return makeGroqRequest(model, retries - 1);
+                    } else {
+                        // After retries exhausted, mark as dead for this session
+                        console.error(`Groq ${model} Rate Limit Exceeded. Marking as dead for this session.`);
+                        deadModels.add(model);
+                    }
                 }
                 throw new Error(`${data.error?.message || response.statusText} (${response.status})`);
             }
@@ -186,12 +195,16 @@ async function tryGroq(prompt, jsonMode = false) {
 
         } catch (error) {
             console.error(`Groq ${model} FAILED:`, error.message);
-            // If it was a rate limit error that exhausted retries, or another error, throw it so the loop tries next model
             throw error;
         }
     };
 
     for (const model of GROQ_MODELS) {
+        if (deadModels.has(model)) {
+            // console.warn(`Skipping dead model: ${model}`); // verbose
+            continue;
+        }
+
         try {
             const text = await makeGroqRequest(model);
             if (text) {
@@ -199,7 +212,7 @@ async function tryGroq(prompt, jsonMode = false) {
                 return text;
             }
         } catch (error) {
-            // Already logged in helper
+            // Already logged
             continue; // Try next model
         }
     }
@@ -277,7 +290,7 @@ export const aiCourseGenerator = {
 
         try {
             const outlinePrompt = `Create a comprehensive learning course on "${userGoal}".
-Generate a course with 4 modules, 4 lessons each.${styleHint}${paceHint}
+Generate a course with 3 modules, 3 lessons each.${styleHint}${paceHint}
 RESPOND ONLY WITH JSON:
 {
   "title": "Course Title",

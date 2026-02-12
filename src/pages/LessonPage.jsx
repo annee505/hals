@@ -13,6 +13,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.min.css';
+import Mermaid from '../components/Mermaid';
 
 const LessonPage = () => {
     const { courseId, lessonId } = useParams();
@@ -252,8 +253,18 @@ const LessonPage = () => {
                                             <table {...props} className="min-w-full" />
                                         </div>
                                     ),
+                                    code: ({ node, inline, className, children, ...props }) => {
+                                        const match = /language-mermaid/.exec(className || '');
+                                        return !inline && match ? (
+                                            <Mermaid chart={String(children).replace(/\n$/, '')} />
+                                        ) : (
+                                            <code className={className} {...props}>
+                                                {children}
+                                            </code>
+                                        );
+                                    },
                                     pre: ({ node, ...props }) => (
-                                        <pre {...props} className="!bg-gray-900 rounded-xl shadow-lg border border-gray-700 overflow-x-auto" />
+                                        <pre {...props} className="bg-transparent p-0 m-0 border-0 shadow-none" />
                                     ),
                                 }}
                             >

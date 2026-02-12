@@ -1,5 +1,5 @@
 import { supabase } from './supabase-config';
-import Groq from 'groq-sdk';
+
 
 const FLASHCARD_KEY = 'hals_flashcards';
 const FLASHCARD_DECK_KEY = 'hals_flashcard_decks';
@@ -28,10 +28,12 @@ function saveDeckToCache(courseId, deck) {
     } catch (e) { /* ignore */ }
 }
 
+import { tryGroq } from './aiCourseGenerator';
+
+// ... existing code ...
+
 // Generate flashcards from lesson content using AI
 async function generateFlashcardsFromContent(courseTitle, lessonContents) {
-    if (!groqApiKey) return null;
-
     const contentSummary = lessonContents
         .slice(0, 5) // Use up to 5 lessons to keep prompt size down
         .map(l => `## ${l.title}\n${(l.content || '').substring(0, 500)}`)
@@ -47,15 +49,12 @@ Example format:
 [{"front": "What is X?", "back": "X is..."}]`;
 
     try {
-        const groq = new Groq({ apiKey: groqApiKey, dangerouslyAllowBrowser: true });
-        const response = await groq.chat.completions.create({
-            messages: [{ role: 'user', content: prompt }],
-            model: 'llama-3.3-70b-versatile',
-            temperature: 0.3,
-            max_tokens: 1500
-        });
+        // Use the robust tryGroq function which handles retries and rate limits
+        // We use jsonMode=false because we want an Array, and json_object mode requires a root Object
+        const text = await tryGroq(prompt, false);
 
-        const text = response.choices[0]?.message?.content || '';
+        if (!text) return null;
+
         // Extract JSON array from response
         const jsonMatch = text.match(/\[[\s\S]*\]/);
         if (jsonMatch) {
