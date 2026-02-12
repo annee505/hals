@@ -101,7 +101,18 @@ const Mermaid = ({ chart }) => {
     if (svgContent) {
         return (
             <div
-                className="mermaid-container my-6 flex justify-center bg-white p-6 rounded-xl border border-gray-200 dark:border-gray-600 overflow-x-auto shadow-sm"
+                className="mermaid-container my-6 not-prose"
+                style={{
+                    background: '#ffffff',
+                    padding: '24px',
+                    borderRadius: '12px',
+                    border: '1px solid #e5e7eb',
+                    overflowX: 'auto',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    maxWidth: '100%'
+                }}
                 dangerouslySetInnerHTML={{ __html: svgContent }}
             />
         );
