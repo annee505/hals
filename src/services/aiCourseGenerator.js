@@ -144,33 +144,66 @@ async function tryGemini(prompt) {
     }
 }
 
-// Try to generate with Groq
+// Helper for delay
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 async function tryGroq(prompt, jsonMode = false) {
     if (!groqApiKey) {
         console.warn('Groq: no API key configured');
         return null;
     }
 
-    const groq = new Groq({ apiKey: groqApiKey, dangerouslyAllowBrowser: true });
+    // Helper to make request with retries
+    const makeGroqRequest = async (model, retries = 3) => {
+        try {
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${groqApiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    messages: [{ role: 'user', content: prompt }],
+                    model: model,
+                    response_format: jsonMode ? { type: "json_object" } : undefined
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                // Handle Rate Limiting (429)
+                if (response.status === 429 && retries > 0) {
+                    const waitTime = 5000; // Wait 5 seconds
+                    console.warn(`Groq ${model} 429 Rate Limit. Waiting ${waitTime}ms... (${retries} retries left)`);
+                    await delay(waitTime);
+                    return makeGroqRequest(model, retries - 1);
+                }
+                throw new Error(`${data.error?.message || response.statusText} (${response.status})`);
+            }
+
+            return data.choices[0]?.message?.content || null;
+
+        } catch (error) {
+            console.error(`Groq ${model} FAILED:`, error.message);
+            // If it was a rate limit error that exhausted retries, or another error, throw it so the loop tries next model
+            throw error;
+        }
+    };
 
     for (const model of GROQ_MODELS) {
         try {
-            const options = {
-                messages: [{ role: "user", content: prompt }],
-                model: model,
-                temperature: 0.5
-            };
-            if (jsonMode) {
-                options.response_format = { type: "json_object" };
+            const text = await makeGroqRequest(model);
+            if (text) {
+                console.log(`Groq ${model}: success`);
+                return text;
             }
-            const completion = await groq.chat.completions.create(options);
-            const text = completion.choices[0]?.message?.content;
-            console.log(`Groq ${model}: success, got ${text?.length || 0} chars`);
-            return text;
         } catch (error) {
-            console.error(`Groq ${model} FAILED:`, error.message);
+            // Already logged in helper
+            continue; // Try next model
         }
     }
+
     console.error('Groq: ALL models failed');
     return null;
 }
@@ -179,12 +212,12 @@ async function tryGroq(prompt, jsonMode = false) {
 function getStyleInstructions(style) {
     const instructions = {
         visual: `LEARNING STYLE: Visual
-- Include diagrams described in text (ASCII art or markdown tables to illustrate concepts)
+- Include "Mermaid" diagrams (using \`\`\`mermaid code blocks) to illustrate concepts
 - Reference video tutorials and visual resources frequently
 - Use analogies and visual metaphors to explain concepts
 - Add "📺 Watch" sections with YouTube search links for key topics
 - Structure content with clear visual hierarchy using headers, bullets, and bold text
-- Include flowcharts or step-by-step visual breakdowns where applicable`,
+- Include markdown tables for comparisons`,
 
         auditory: `LEARNING STYLE: Auditory
 - Include "🎧 Listen" sections with podcast or audio resource recommendations
@@ -334,7 +367,7 @@ CRITICAL RULES:
 - Do NOT write generic filler like "this topic is important" or "practice makes perfect".
 - Every paragraph must contain SPECIFIC, factual information directly about "${lesson.title}".
 - Only include a Code Example section if the course is about programming, software development, or a technical coding topic. If the course is about history, music, art, science, business, or any non-programming topic, do NOT include any code blocks at all.
-- Use markdown tables where appropriate (timelines, comparisons, etc.). NEVER use ASCII art or box-drawing characters.
+- Use markdown tables where appropriate (timelines, comparisons, etc.). NEVER use ASCII art or box-drawing characters. Use Mermaid diagrams for complex visualizations.
 
 ${styleBlock}
 
