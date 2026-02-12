@@ -56,8 +56,11 @@ function sanitizeChart(raw) {
 
     // Fix spaces in node IDs before brackets: Blues Style["label"] -> Blues_Style["label"]
     body = body.replace(/^(\s*)(\w+(?:\s+\w+)+)(\s*[\[\(\{])/gm, (match, indent, nodeId, bracket) => {
-        return indent + nodeId.replace(/\s+/g, '_') + bracket;
+        return indent + nodeId.replace(/\s+/g, '_') + bracket.trim();
     });
+
+    // Fix space between node ID and bracket (e.g. A ["Label"] -> A["Label"])
+    body = body.replace(/(\w)\s+([\[\(\{])/g, '$1$2');
 
     // Fix spaces in node IDs around arrows: Node One --> Node Two -> Node_One --> Node_Two
     body = body.replace(/(\s+)([\w]+(?:\s+[\w]+)+)(\s*-->)/gm, (match, pre, nodeId, arrow) => {
