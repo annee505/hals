@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 
-// Initialize mermaid once
+// Initialize mermaid with defaults (will be re-initialized tailored to theme on render)
 mermaid.initialize({
     startOnLoad: false,
     theme: 'default',
@@ -41,6 +41,10 @@ function sanitizeChart(raw) {
     chart = chart.replace(/\|>/g, '|');
     chart = chart.replace(/\|\s+>/g, '|');
 
+    // Fix "add" arrows (AI hallucination like +.->)
+    chart = chart.replace(/\+\.->/g, '-.->');
+    chart = chart.replace(/\+->/g, '-->');
+
     // Remove trailing semicolons
     chart = chart.replace(/;\s*$/gm, '');
 
@@ -57,12 +61,20 @@ function sanitizeChart(raw) {
     // Fix space between node ID and bracket (e.g. A ["Label"] -> A["Label"])
     body = body.replace(/(\w)\s+([\[\(\{])/g, '$1$2');
 
-    // Fix spaces in node IDs around arrows: Node One --> Node Two -> Node_One --> Node_Two
-    body = body.replace(/(\s+)([\w]+(?:\s+[\w]+)+)(\s*-->)/gm, (match, pre, nodeId, arrow) => {
-        return pre + nodeId.replace(/\s+/g, '_') + arrow;
+    // Fix spaces/symbols in node IDs around arrows
+    // Regex matches: (pre)(ID)(arrow start)
+    // ID can contain word chars, spaces, +, -
+    // arrow start matches -, =, . followed by > or |
+    const arrowRegex = /(\s+)([\w\s+\-]+)(\s*[-=.]+(?:>|\|))/gm;
+    body = body.replace(arrowRegex, (match, pre, nodeId, arrow) => {
+        return pre + nodeId.replace(/[\s\+\-]+/g, '_') + arrow;
     });
-    body = body.replace(/(-->(?:\|[^|]*\|)?\s*)([\w]+(?:\s+[\w]+)+)(\s*$)/gm, (match, arrow, nodeId, end) => {
-        return arrow + nodeId.replace(/\s+/g, '_') + end;
+
+    // Handle end of line nodes (e.g. A --> B)
+    // Regex matches: (arrow)(ID)(end)
+    const endNodeRegex = /([-=.]+(?:>|\|)(?:\|[^|]*\|)?\s*)([\w\s+\-]+)(\s*$)/gm;
+    body = body.replace(endNodeRegex, (match, arrow, nodeId, end) => {
+        return arrow + nodeId.replace(/[\s\+\-]+/g, '_') + end;
     });
 
     chart = firstLine + '\n' + body;
@@ -73,9 +85,25 @@ function sanitizeChart(raw) {
 const Mermaid = ({ chart }) => {
     const containerRef = useRef(null);
     const [error, setError] = useState(null);
+    // Use themeKey to force re-render when theme changes
+    const [themeKey, setThemeKey] = useState(0);
     const [isRendering, setIsRendering] = useState(true);
 
     const sanitized = sanitizeChart(chart);
+
+    // Watch for dark mode changes
+    useEffect(() => {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    setThemeKey(k => k + 1);
+                }
+            });
+        });
+
+        observer.observe(document.documentElement, { attributes: true });
+        return () => observer.disconnect();
+    }, []);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -85,7 +113,20 @@ const Mermaid = ({ chart }) => {
             setError(null);
 
             try {
-                // We use key={sanitized} on the div, so it's always a fresh element with text content
+                // Detect dark mode from html or body class
+                const isDark = document.documentElement.classList.contains('dark') ||
+                    document.body.classList.contains('dark');
+
+                // Re-initialize with correct theme
+                mermaid.initialize({
+                    startOnLoad: false,
+                    theme: isDark ? 'dark' : 'default',
+                    securityLevel: 'loose',
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                    logLevel: 'error'
+                });
+
+                // We use key={sanitized + themeKey} on the div, so it's always a fresh element with text content
                 await mermaid.run({
                     nodes: [containerRef.current],
                     suppressErrors: false
@@ -98,10 +139,10 @@ const Mermaid = ({ chart }) => {
             }
         };
 
-        // Small timeout to allow DOM paint? usually usually not needed with Effect but safer
+        // Small timeout to allow DOM paint
         requestAnimationFrame(() => runMermaid());
 
-    }, [sanitized]);
+    }, [sanitized, themeKey]); // Re-run when chart or theme changes
 
     if (error) {
         return (
@@ -122,10 +163,10 @@ const Mermaid = ({ chart }) => {
 
     return (
         <div className="my-6 flex justify-center">
-            {/* key={sanitized} forces React to destroy and recreate the div when chart changes,
+            {/* key forces React to destroy and recreate the div,
                 restoring it to a plain text container before mermaid.run processes it. */}
             <div
-                key={sanitized}
+                key={`${sanitized}-${themeKey}`}
                 className="mermaid bg-white dark:bg-gray-800 p-4 rounded-xl overflow-x-auto"
                 ref={containerRef}
                 style={{ opacity: isRendering ? 0 : 1, transition: 'opacity 0.2s' }}
