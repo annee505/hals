@@ -13,6 +13,34 @@ const GROQ_MODELS = [
     'gemma2-9b-it'
 ];
 
+/**
+ * Parse a duration string like "15 min", "1 hr 30 min" into total minutes.
+ * Returns 0 if unparseable.
+ */
+function parseDurationToMinutes(str) {
+    if (!str || typeof str !== 'string') return 0;
+    const s = str.toLowerCase().trim();
+    let total = 0;
+    const hrMatch = s.match(/(\d+\.?\d*)\s*(?:hr|hrs|hour|hours)/);
+    const minMatch = s.match(/(\d+\.?\d*)\s*(?:min|mins|minute|minutes)/);
+    if (hrMatch) total += parseFloat(hrMatch[1]) * 60;
+    if (minMatch) total += parseFloat(minMatch[1]);
+    return Math.round(total);
+}
+
+/**
+ * Format total minutes into a readable duration string.
+ * e.g. 195 → "~3 hrs 15 min"
+ */
+function formatTotalDuration(totalMinutes) {
+    if (!totalMinutes || totalMinutes <= 0) return 'Self-paced';
+    const hrs = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    if (hrs === 0) return `~${mins} min`;
+    if (mins === 0) return `~${hrs} hr${hrs > 1 ? 's' : ''}`;
+    return `~${hrs} hr${hrs > 1 ? 's' : ''} ${mins} min`;
+}
+
 // Generate local course when all APIs fail — make titles topic-aware
 function generateLocalCourse(userGoal) {
     const goal = userGoal.trim();
@@ -20,7 +48,6 @@ function generateLocalCourse(userGoal) {
         title: `${goal}`,
         description: `A structured learning path to help you understand and master ${goal}. Covers foundations through advanced topics with curated resources and exercises.`,
         difficulty: "Beginner",
-        duration: "6 weeks",
         tags: goal.split(' ').slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1)),
         modules: [
             {
@@ -356,14 +383,20 @@ export const aiCourseGenerator = {
         try {
             const outlinePrompt = `Create a comprehensive learning course on "${userGoal}".
 Generate a course with 3 modules, 3 lessons each.${styleHint}${paceHint}
+
+CRITICAL RULES FOR MODULE TITLES:
+- Do NOT name modules "Week 1", "Week 2", "Week 3" etc. — Use descriptive topic-based titles instead.
+- Each module title must reflect the actual subject content (e.g. "Foundations of Python", "Data Structures & Algorithms").
+
+For each lesson, estimate a realistic reading/watch time in minutes based on actual content depth (e.g. "20 min", "35 min").
+
 RESPOND ONLY WITH JSON:
 {
   "title": "Course Title",
   "description": "Description",
   "difficulty": "Beginner",
-  "duration": "6 weeks",
   "tags": ["tag1", "tag2"],
-  "modules": [{"title": "Module", "description": "Desc", "lessons": [{"title": "Lesson", "duration": "15 min"}]}]
+  "modules": [{"title": "Descriptive Module Title", "description": "Desc", "lessons": [{"title": "Lesson", "duration": "20 min"}]}]
 }`;
 
             // Try Groq first, then Gemini, then OpenRouter, then local
@@ -492,30 +525,37 @@ How this knowledge applies in real-world contexts — analysis exercises, discus
 - Specific summary bullets that reference actual content covered
 
 ## 📺 Recommended Videos
-Recommend 2-3 SPECIFIC, well-known YouTube videos that are genuinely useful for learning "${lesson.title}".
-For each video, provide:
-- The EXACT video title as it appears on YouTube
-- The channel name
-- A brief note on why it's helpful (1 sentence)
+Recommend 2-3 real YouTube videos that are SPECIFICALLY about "${lesson.title}" — NOT generic tutorials.
 
-Format each video as a link using this pattern:
-[Video Title — Channel Name](https://www.youtube.com/results?search_query=EXACT+VIDEO+TITLE+CHANNEL+NAME)
+IMPORTANT: Provide ACTUAL YouTube video URLs (not search queries). Use the format:
+https://www.youtube.com/watch?v=VIDEO_ID
 
-Pick videos from well-known educational channels relevant to this subject area.
+Only include videos you are confident exist. For example:
+- If the lesson is about Scorpion biology, recommend a real BBC/National Geographic documentary on scorpions.
+- If the lesson is about Python decorators, recommend Corey Schafer's decorator video.
+- If the lesson is about Jazz history, recommend Ken Burns Jazz documentary clips.
+
+Do NOT use generic search query URLs like youtube.com/results?search_query=...
+
+Format:
+[Exact Video Title — Channel Name](https://www.youtube.com/watch?v=REAL_VIDEO_ID)
+
+If you cannot recall a specific video ID with high confidence, instead link to the channel's homepage or omit that video. Better to have 1 real link than 3 fake ones.
 
 ## 🔗 Curated Resources
-Provide 3-4 resource links using ONLY these safe URL patterns:
+Provide 3-4 resource links using ONLY these safe, working URL patterns:
 
 1. **Wikipedia**: [Topic Name — Wikipedia](https://en.wikipedia.org/wiki/TOPIC_WITH_UNDERSCORES)
 2. **Google Scholar**: [Research on Topic — Google Scholar](https://scholar.google.com/scholar?q=URL+ENCODED+TOPIC)
-3. **YouTube Search**: [Topic tutorials — YouTube](https://www.youtube.com/results?search_query=URL+ENCODED+TOPIC)
+3. **Britannica**: [Topic — Britannica](https://www.britannica.com/search?query=URL+ENCODED+TOPIC)
 
-Then add 1-2 links ONLY from these domains using their ACTUAL known URL patterns:
+Optionally add 1-2 links ONLY from these domains if the exact URL pattern is known:
 - Wikipedia: https://en.wikipedia.org/wiki/...
 - Khan Academy: https://www.khanacademy.org/...
 - Britannica: https://www.britannica.com/topic/...
+- MDN Web Docs (for web/JS topics): https://developer.mozilla.org/...
 
-CRITICAL: Do NOT invent or guess URLs. Use search query links if unsure.
+CRITICAL: NEVER invent URLs. Use Britannica/Google Scholar search query patterns when unsure. Every link must follow a safe, known pattern.
 
 Use rich Markdown formatting throughout — headers, bold, tables, bullet lists, blockquotes.`;
 
@@ -547,6 +587,35 @@ Use rich Markdown formatting throughout — headers, bold, tables, bullet lists,
                     // Small delay
                     await new Promise(r => setTimeout(r, 200));
                 }
+            }
+
+            // Compute and save real total duration from all lesson durations
+            try {
+                // Fetch all lessons for this course to sum durations
+                const { data: allModules } = await supabase
+                    .from('modules')
+                    .select('id, lessons(duration)')
+                    .eq('course_id', course.id);
+
+                if (allModules) {
+                    let totalMinutes = 0;
+                    allModules.forEach(mod => {
+                        (mod.lessons || []).forEach(lesson => {
+                            totalMinutes += parseDurationToMinutes(lesson.duration);
+                        });
+                    });
+
+                    const computedDuration = formatTotalDuration(totalMinutes);
+                    await supabase
+                        .from('courses')
+                        .update({ duration: computedDuration })
+                        .eq('id', course.id);
+
+                    // Return updated course object
+                    return { ...course, duration: computedDuration };
+                }
+            } catch (durationError) {
+                console.warn('Could not compute course duration:', durationError.message);
             }
 
             return course;

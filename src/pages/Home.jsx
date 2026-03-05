@@ -143,9 +143,9 @@ const Home = () => {
                     {/* Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
                         {[
-                            { icon: TrendingUp, label: 'Active Learners', value: '10,000+' },
-                            { icon: Award, label: 'Courses Available', value: '24+' },
-                            { icon: Sparkles, label: 'Success Rate', value: '95%' }
+                            { icon: TrendingUp, label: 'Active Learners', value: '2,500+' },
+                            { icon: Award, label: 'Courses Available', value: loading ? '...' : `${courses.length}+` },
+                            { icon: Sparkles, label: 'Success Rate', value: '91%' }
                         ].map((stat, i) => (
                             <motion.div
                                 key={i}
